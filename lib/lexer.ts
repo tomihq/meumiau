@@ -398,33 +398,13 @@ function parseIfStatement(context: ParserContext): AstNode {
   // Consume 'then'
   consume(context, 'KEYWORD', "Expected 'then'");
   
-  // Parse then block
-  consume(context, 'SYMBOL', "Expected '(' after 'then'");
-  const thenTokens: Token[] = [];
-  parenCount = 1;
-  
-  while (!isAtEnd(context) && parenCount > 0) {
-    const token = peek(context);
-    if (token.type === 'SYMBOL') {
-      if (token.value === '(') parenCount++;
-      else if (token.value === ')') parenCount--;
-    }
-    
-    if (parenCount > 0) {
-      thenTokens.push(advance(context));
-    }
-  }
-  
-  consume(context, 'SYMBOL', "Expected ')' after then block");
-  
-  // Parse else block if present
-  let elseBranch: AstNode | undefined;
-  if (check(context, 'KEYWORD') && peek(context).value === 'else') {
-    advance(context); // Consume 'else'
-    consume(context, 'SYMBOL', "Expected '(' after 'else'");
-    
-    const elseTokens: Token[] = [];
-    parenCount = 1;
+  // Parse then block - can be either a simple expression or a parenthesized block
+  let thenBranch: AstNode;
+  if (check(context, 'SYMBOL') && peek(context).value === '(') {
+    // Parenthesized block
+    advance(context); // Consume '('
+    const thenTokens: Token[] = [];
+    let parenCount = 1;
     
     while (!isAtEnd(context) && parenCount > 0) {
       const token = peek(context);
@@ -434,20 +414,78 @@ function parseIfStatement(context: ParserContext): AstNode {
       }
       
       if (parenCount > 0) {
-        elseTokens.push(advance(context));
+        thenTokens.push(advance(context));
       }
     }
     
-    consume(context, 'SYMBOL', "Expected ')' after else block");
+    consume(context, 'SYMBOL', "Expected ')' after then block");
     
-    // Parse else block
-    const elseContext = createParserContext(elseTokens);
-    elseBranch = parseStatement(elseContext);
+    // Parse then block
+    const thenContext = createParserContext(thenTokens);
+    thenBranch = parseStatement(thenContext);
+  } else {
+    // Simple expression (no parentheses)
+    const thenTokens: Token[] = [];
+    while (!isAtEnd(context) && 
+           !(check(context, 'KEYWORD') && peek(context).value === 'else') &&
+           !check(context, 'SEMICOLON')) {
+      thenTokens.push(advance(context));
+    }
+    
+    if (thenTokens.length === 0) {
+      throw new Error("Expected expression after 'then'");
+    }
+    
+    // Parse as expression
+    const thenContext = createParserContext(thenTokens);
+    thenBranch = parseExpression(thenContext);
   }
   
-  // Parse then block
-  const thenContext = createParserContext(thenTokens);
-  const thenBranch = parseStatement(thenContext);
+  // Parse else block if present
+  let elseBranch: AstNode | undefined;
+  if (check(context, 'KEYWORD') && peek(context).value === 'else') {
+    advance(context); // Consume 'else'
+    
+    // Parse else block - can be either a simple expression or a parenthesized block
+    if (check(context, 'SYMBOL') && peek(context).value === '(') {
+      // Parenthesized block
+      advance(context); // Consume '('
+      const elseTokens: Token[] = [];
+      let parenCount = 1;
+      
+      while (!isAtEnd(context) && parenCount > 0) {
+        const token = peek(context);
+        if (token.type === 'SYMBOL') {
+          if (token.value === '(') parenCount++;
+          else if (token.value === ')') parenCount--;
+        }
+        
+        if (parenCount > 0) {
+          elseTokens.push(advance(context));
+        }
+      }
+      
+      consume(context, 'SYMBOL', "Expected ')' after else block");
+      
+      // Parse else block
+      const elseContext = createParserContext(elseTokens);
+      elseBranch = parseStatement(elseContext);
+    } else {
+      // Simple expression (no parentheses)
+      const elseTokens: Token[] = [];
+      while (!isAtEnd(context) && !check(context, 'SEMICOLON')) {
+        elseTokens.push(advance(context));
+      }
+      
+      if (elseTokens.length === 0) {
+        throw new Error("Expected expression after 'else'");
+      }
+      
+      // Parse as expression
+      const elseContext = createParserContext(elseTokens);
+      elseBranch = parseExpression(elseContext);
+    }
+  }
   
   return {
     type: 'IfStatement',
@@ -463,24 +501,88 @@ function parseVariableAssignment(context: ParserContext): AstNode {
   
   advance(context); // Consume '='
   
-  // Parse value
-  const valueTokens: Token[] = [];
-  while (!isAtEnd(context) && !check(context, 'SEMICOLON')) {
-    valueTokens.push(advance(context));
-  }
+  // Parse the right-hand side as an expression
+  const expressionNode = parseExpression(context);
   
   // Consume semicolon if present
   if (check(context, 'SEMICOLON')) {
     advance(context);
   }
   
-  const value = valueTokens.map(t => t.value).join(' ');
-  
   return {
     type: 'VariableAssignment',
     name: varName,
-    value
+    value: expressionNode
   };
+}
+
+// New function to parse expressions (including IF statements)
+function parseExpression(context: ParserContext): AstNode {
+  // Check for IF statement
+  if (check(context, 'KEYWORD') && peek(context).value === 'if') {
+    return parseIfStatement(context);
+  }
+  
+  // Check for variable reference
+  if (check(context, 'IDENTIFIER') && peek(context).value.startsWith('$')) {
+    const varToken = advance(context);
+    return { type: 'Literal', value: varToken.value };
+  }
+  
+  // Check for boolean literals
+  if (check(context, 'IDENTIFIER')) {
+    const token = peek(context);
+    if (token.value === 'true') {
+      advance(context);
+      return { type: 'Literal', value: true };
+    }
+    if (token.value === 'false') {
+      advance(context);
+      return { type: 'Literal', value: false };
+    }
+  }
+  
+  // Check for numbers
+  if (check(context, 'NUMBER')) {
+    const token = advance(context);
+    return { type: 'Literal', value: Number(token.value) };
+  }
+  
+  // Check for strings
+  if (check(context, 'STRING')) {
+    const token = advance(context);
+    return { type: 'Literal', value: token.value };
+  }
+  
+  // Check for arrays
+  if (check(context, 'SYMBOL') && peek(context).value === '[') {
+    return parseArray(context);
+  }
+  
+  // Default to command parsing
+  return parseCommand(context);
+}
+
+// New function to parse arrays
+function parseArray(context: ParserContext): AstNode {
+  advance(context); // Consume '['
+  
+  const elements: AstNode[] = [];
+  
+  while (!isAtEnd(context) && !check(context, 'SYMBOL') || peek(context).value !== ']') {
+    if (check(context, 'SYMBOL') && peek(context).value === ',') {
+      advance(context); // Consume comma
+      continue;
+    }
+    
+    elements.push(parseExpression(context));
+  }
+  
+  if (check(context, 'SYMBOL') && peek(context).value === ']') {
+    advance(context); // Consume ']'
+  }
+  
+  return { type: 'Literal', value: elements };
 }
 
 function parseDoLoop(context: ParserContext): AstNode {
@@ -541,6 +643,19 @@ function parseCommand(context: ParserContext): AstNode {
   
   if (tokens.length === 0) {
     return { type: 'Unknown', raw: '' };
+  }
+  
+  // Check for boolean literals
+  if (tokens.length === 1) {
+    const token = tokens[0];
+    if (token.type === 'IDENTIFIER') {
+      if (token.value === 'true') {
+        return { type: 'Literal', value: true };
+      }
+      if (token.value === 'false') {
+        return { type: 'Literal', value: false };
+      }
+    }
   }
   
   const commandName = tokens[0].value.toLowerCase();

@@ -42,7 +42,7 @@ export interface ParserContext {
 
 export type AstNode =
   | { type: 'Command'; name: string; args: string }
-  | { type: 'VariableAssignment'; name: string; value: string }
+  | { type: 'VariableAssignment'; name: string; value: AstNode }
   | { type: 'IfStatement'; condition: string; thenBranch: AstNode; elseBranch?: AstNode }
   | { type: 'DoLoop'; collection: string; param: string; command: string }
   | { type: 'Unknown'; raw: string }

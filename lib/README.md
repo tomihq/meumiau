@@ -62,6 +62,7 @@ $x = 5
 $name = 'John'
 $list = [1, 2, 3]
 $x = $x + 2
+$result = if (6>5) then $arr else $arr2  # IF statements como valores
 ```
 
 ### 2. Comandos Simples

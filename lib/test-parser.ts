@@ -27,6 +27,11 @@ const testCases = [
   // Complex expressions
   "echo 'Hello, {$name}'",
   "echo 'Result: {2 + 3}'",
+  
+  // New: IF statements as values
+  "$result = if (6>5) then $arr else $arr2",
+  "$bool = if (true) then true else false",
+  "$num = if (10>5) then 42 else 0",
 ];
 
 export function testParser() {
@@ -48,7 +53,10 @@ export function testParser() {
       if (astNode.type === 'Command') {
         console.log(`  Command: ${astNode.name} "${astNode.args}"`);
       } else if (astNode.type === 'VariableAssignment') {
-        console.log(`  Assignment: $${astNode.name} = "${astNode.value}"`);
+        console.log(`  Assignment: $${astNode.name} = ${astNode.value.type}`);
+        if (astNode.value.type === 'IfStatement') {
+          console.log(`    IF condition: ${astNode.value.condition}`);
+        }
       } else if (astNode.type === 'IfStatement') {
         console.log(`  If: ${astNode.condition}`);
       } else if (astNode.type === 'DoLoop') {
@@ -70,7 +78,7 @@ export function testInterpreter() {
   const mockContext = {
     currentSection: 'home',
     router: { push: (path: string) => console.log(`Navigate to: ${path}`) },
-    variables: { x: 5, name: 'Tom', list: [1, 2, 3] },
+    variables: { x: 5, name: 'Tom', list: [1, 2, 3], arr: [10, 20], arr2: [30, 40] },
     setVariables: (fn: any) => console.log('Variables updated'),
     setHistory: (fn: any) => console.log('History updated'),
     setIsOpen: (fn: any) => console.log('Terminal state updated'),
@@ -83,6 +91,10 @@ export function testInterpreter() {
     "echo 'List: {$list}'",
     "if ($x > 3) then (echo 'X is greater than 3')",
     "$list.do((item) -> echo item)",
+    // New: IF statements as values
+    "$result = if (6>5) then $arr else $arr2",
+    "$bool = if (true) then true else false",
+    "$num = if (10>5) then 42 else 0",
   ];
   
   testCommands.forEach((command, index) => {
@@ -100,8 +112,65 @@ export function testInterpreter() {
   });
 }
 
+// Test specific IF statement as value
+export function testIfAsValue() {
+  console.log("🧪 Testing IF statement as value...\n");
+  
+  const mockContext = {
+    currentSection: 'home',
+    router: { push: (path: string) => console.log(`Navigate to: ${path}`) },
+    variables: { arr: [10, 20], arr2: [30, 40] },
+    setVariables: (fn: any) => {
+      const newVars = fn({ arr: [10, 20], arr2: [30, 40] });
+      console.log('Variables updated:', newVars);
+    },
+    setHistory: (fn: any) => console.log('History updated'),
+    setIsOpen: (fn: any) => console.log('Terminal state updated'),
+  };
+  
+  const testCommands = [
+    "$arr3 = if (6>5) then $arr else $arr2",
+    "$bool = if (true) then true else false",
+    "$num = if (10>5) then 42 else 0",
+    "if (6>5) then (if (5<4) then (true) else (false)) else (echo 'hola')"
+  ];
+  
+  testCommands.forEach((testCommand, index) => {
+    console.log(`Test ${index + 1}: "${testCommand}"`);
+    
+    try {
+      const astNode = parseCommandToAstNode(testCommand);
+      console.log(`AST type: ${astNode.type}`);
+      
+      if (astNode.type === 'VariableAssignment') {
+        console.log(`Variable: $${astNode.name}`);
+        console.log(`Value type: ${astNode.value.type}`);
+        
+        if (astNode.value.type === 'IfStatement') {
+          console.log(`IF condition: ${astNode.value.condition}`);
+          console.log(`Then branch: ${astNode.value.thenBranch.type}`);
+          console.log(`Else branch: ${astNode.value.elseBranch?.type || 'none'}`);
+        }
+      } else if (astNode.type === 'IfStatement') {
+        console.log(`IF condition: ${astNode.condition}`);
+        console.log(`Then branch: ${astNode.thenBranch.type}`);
+        console.log(`Else branch: ${astNode.elseBranch?.type || 'none'}`);
+      }
+      
+      const output = interpretAstNode(astNode, mockContext);
+      console.log(`Output: ${output.join('\n  ')}`);
+      
+    } catch (error) {
+      console.log(`❌ Error: ${error}`);
+    }
+    
+    console.log('');
+  });
+}
+
 // Run tests if this file is executed directly
 if (require.main === module) {
   testParser();
   testInterpreter();
+  testIfAsValue();
 } 
