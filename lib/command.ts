@@ -259,14 +259,14 @@ export const COMMAND_DEFINITIONS: Record<string, CommandDefinition> = {
     execute: (args, { commandHistory }) => [ // Needs commandHistory from outer scope
       "Command history:",
       "",
-      ...commandHistory.map((cmd, index) => `  ${(index + 1).toString().padStart(3)}: ${cmd}`),
+      ...(commandHistory || []).map((cmd, index) => `  ${(index + 1).toString().padStart(3)}: ${cmd}`),
     ],
   },
   exit: {
     description: "Close terminal",
 
     execute: (args, { setIsOpen }) => { // Needs setIsOpen from outer scope
-      setIsOpen(false);
+      setIsOpen?.(false);
       return ["Terminal closed."];
     },
   },

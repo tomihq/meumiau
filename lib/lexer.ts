@@ -1,97 +1,563 @@
-import { ifRegex } from './regex';
-import { AstNode } from './types';
-import { findClosingParen, tryParseBooleanExpression } from './utils';
+import { Token, TokenType, ParserContext, AstNode } from './types';
 
-export const parseCommandToAstNode = (commandString: string): AstNode => {
-  const trimmedCmd = commandString.trim();
-  
+// Keywords that have special meaning
+const KEYWORDS = new Set(['if', 'then', 'else', 'do']);
 
-  // ✅ Parse IF de forma estructural, no con regex
- if (trimmedCmd.startsWith("if (")) {
-  const openIndex = 3; // posición del '(' luego de 'if '
-  const conditionEnd = findClosingParen(trimmedCmd, openIndex);
-  const condition = trimmedCmd.slice(openIndex + 1, conditionEnd).trim();
+// Operators with their precedence
+const OPERATORS = new Map([
+  ['=', 'ASSIGN'],
+  ['==', 'EQ'],
+  ['!=', 'NEQ'],
+  ['<', 'LT'],
+  ['>', 'GT'],
+  ['<=', 'LTE'],
+  ['>=', 'GTE'],
+  ['+', 'ADD'],
+  ['-', 'SUB'],
+  ['*', 'MUL'],
+  ['/', 'DIV'],
+]);
 
-  const afterCond = trimmedCmd.slice(conditionEnd + 1).trim();
-  if (!afterCond.toLowerCase().startsWith("then")) {
-    throw new Error("Expected 'then' after if condition");
+export class Lexer {
+  private input: string;
+  private position: number = 0;
+  private line: number = 1;
+  private tokens: Token[] = [];
+
+  constructor(input: string) {
+    this.input = input;
   }
 
-  const thenStart = afterCond.indexOf("(");
-  const thenEnd = findClosingParen(afterCond, thenStart);
-  const thenBlock = afterCond.slice(thenStart + 1, thenEnd).trim();
-
-  const afterThen = afterCond.slice(thenEnd + 1).trim();
-  let elseBranch: AstNode | undefined = undefined;
-
-  if (afterThen.toLowerCase().startsWith("else")) {
-    const elseStart = afterThen.indexOf("(");
-    const elseEnd = findClosingParen(afterThen, elseStart);
-    const elseBlock = afterThen.slice(elseStart + 1, elseEnd).trim();
-    elseBranch = parseCommandToAstNode(elseBlock);
+  private isEOF(): boolean {
+    return this.position >= this.input.length;
   }
 
+  private peek(): string {
+    return this.isEOF() ? '\0' : this.input[this.position];
+  }
+
+  private peekNext(): string {
+    return this.position + 1 >= this.input.length ? '\0' : this.input[this.position + 1];
+  }
+
+  private advance(): string {
+    if (this.isEOF()) return '\0';
+    const char = this.input[this.position];
+    this.position++;
+    return char;
+  }
+
+  private match(expected: string): boolean {
+    if (this.peek() === expected) {
+      this.advance();
+      return true;
+    }
+    return false;
+  }
+
+  private skipWhitespace(): void {
+    while (!this.isEOF() && /\s/.test(this.peek())) {
+      if (this.peek() === '\n') {
+        this.line++;
+      }
+      this.advance();
+    }
+  }
+
+  private readString(): Token {
+    const quote = this.advance(); // Consume opening quote
+    const start = this.position;
+    
+    while (!this.isEOF() && this.peek() !== quote) {
+      if (this.peek() === '\\' && this.peekNext() === quote) {
+        this.advance(); // Skip backslash
+      }
+      this.advance();
+    }
+
+    if (this.isEOF()) {
+      throw new Error(`Unterminated string at line ${this.line}`);
+    }
+
+    const value = this.input.substring(start, this.position);
+    this.advance(); // Consume closing quote
+
+    return {
+      type: 'STRING',
+      value,
+      position: start - 1,
+      line: this.line
+    };
+  }
+
+  private readNumber(): Token {
+    const start = this.position;
+    
+    while (!this.isEOF() && /\d/.test(this.peek())) {
+      this.advance();
+    }
+
+    // Handle decimal part
+    if (this.peek() === '.' && /\d/.test(this.peekNext())) {
+      this.advance(); // Consume decimal point
+      while (!this.isEOF() && /\d/.test(this.peek())) {
+        this.advance();
+      }
+    }
+
+    const value = this.input.substring(start, this.position);
+    return {
+      type: 'NUMBER',
+      value,
+      position: start,
+      line: this.line
+    };
+  }
+
+  private readIdentifier(): Token {
+    const start = this.position;
+    
+    while (!this.isEOF() && /[a-zA-Z0-9_]/.test(this.peek())) {
+      this.advance();
+    }
+
+    const value = this.input.substring(start, this.position);
+    const type: TokenType = KEYWORDS.has(value) ? 'KEYWORD' : 'IDENTIFIER';
+
+    return {
+      type,
+      value,
+      position: start,
+      line: this.line
+    };
+  }
+
+  private readOperator(): Token {
+    const start = this.position;
+    
+    // Try two-character operators first
+    if (this.position + 1 < this.input.length) {
+      const twoChar = this.input.substring(this.position, this.position + 2);
+      if (OPERATORS.has(twoChar)) {
+        this.advance();
+        this.advance();
+        return {
+          type: 'OPERATOR',
+          value: twoChar,
+          position: start,
+          line: this.line
+        };
+      }
+    }
+
+    // Single character operator
+    const char = this.advance();
+    if (OPERATORS.has(char)) {
+      return {
+        type: 'OPERATOR',
+        value: char,
+        position: start,
+        line: this.line
+      };
+    }
+
+    throw new Error(`Unknown operator '${char}' at line ${this.line}`);
+  }
+
+  public tokenize(): Token[] {
+    this.tokens = [];
+    this.position = 0;
+    this.line = 1;
+
+    while (!this.isEOF()) {
+      const char = this.peek();
+
+      if (/\s/.test(char)) {
+        this.skipWhitespace();
+        continue;
+      }
+
+      if (char === '"' || char === "'") {
+        this.tokens.push(this.readString());
+        continue;
+      }
+
+      if (/\d/.test(char)) {
+        this.tokens.push(this.readNumber());
+        continue;
+      }
+
+      if (/[a-zA-Z_]/.test(char)) {
+        this.tokens.push(this.readIdentifier());
+        continue;
+      }
+
+      if (char === '$') {
+        this.advance(); // Consume $
+        if (/[a-zA-Z_]/.test(this.peek())) {
+          const identifier = this.readIdentifier();
+          this.tokens.push({
+            type: 'IDENTIFIER',
+            value: '$' + identifier.value,
+            position: identifier.position - 1,
+            line: identifier.line
+          });
+        } else {
+          throw new Error(`Invalid variable name after $ at line ${this.line}`);
+        }
+        continue;
+      }
+
+      if (char === ';') {
+        this.tokens.push({
+          type: 'SEMICOLON',
+          value: this.advance(),
+          position: this.position - 1,
+          line: this.line
+        });
+        continue;
+      }
+
+      if (char === ',') {
+        this.tokens.push({
+          type: 'SYMBOL',
+          value: this.advance(),
+          position: this.position - 1,
+          line: this.line
+        });
+        continue;
+      }
+
+      if (char === '(' || char === ')' || char === '[' || char === ']') {
+        this.tokens.push({
+          type: 'SYMBOL',
+          value: this.advance(),
+          position: this.position - 1,
+          line: this.line
+        });
+        continue;
+      }
+
+      if (char === '.') {
+        this.tokens.push({
+          type: 'SYMBOL',
+          value: this.advance(),
+          position: this.position - 1,
+          line: this.line
+        });
+        continue;
+      }
+
+      if (char === '-' && this.peekNext() === '>') {
+        this.advance(); // Consume -
+        this.advance(); // Consume >
+        this.tokens.push({
+          type: 'SYMBOL',
+          value: '->',
+          position: this.position - 2,
+          line: this.line
+        });
+        continue;
+      }
+
+      // Try to read as operator
+      if (OPERATORS.has(char) || ['=', '!', '<', '>', '+', '-', '*', '/'].includes(char)) {
+        this.tokens.push(this.readOperator());
+        continue;
+      }
+
+      throw new Error(`Unexpected character '${char}' at line ${this.line}`);
+    }
+
+    // Add EOF token
+    this.tokens.push({
+      type: 'EOF',
+      value: '',
+      position: this.position,
+      line: this.line
+    });
+
+    return this.tokens;
+  }
+}
+
+// Parser helper functions
+export function createParserContext(tokens: Token[]): ParserContext {
   return {
-    type: "IfStatement",
-    condition,
-    thenBranch: parseCommandToAstNode(thenBlock),
-    elseBranch,
+    tokens,
+    current: 0,
+    line: 1
   };
 }
 
-  // ✅ Variable assignment: $x = 5
- if (trimmedCmd.includes("=") && trimmedCmd.startsWith("$")) {
-  const match = trimmedCmd.match(/^\$(\w+)\s*=\s*(.+)$/);
-  if (match) {
-    let value = match[2].trim();
-
-    const semicolonCount = (value.match(/;/g) || []).length;
-
-    if (semicolonCount > 1) {
-      throw new Error("Syntax error: multiple ';' characters in assignment value");
-    }
-
-    if (semicolonCount === 1) {
-      if (!/;(\s*)$/.test(value)) {
-        throw new Error("Syntax error: ';' found inside assignment value, only allowed at end");
-      }
-      value = value.replace(/;(\s*)$/, "").trim();
-    }
-
-    return { type: 'VariableAssignment', name: match[1], value };
-  }
+export function isAtEnd(context: ParserContext): boolean {
+  return context.current >= context.tokens.length || 
+         context.tokens[context.current].type === 'EOF';
 }
 
-  // ✅ Do-loop: $list.do((x) -> ...)
-  const doMatch = trimmedCmd.match(/^\$(\w+)\.do\(\(([^)]+)\)\s*->\s*(.+)\)$/);
-  if (doMatch) {
-    return {
-      type: 'DoLoop',
-      collection: doMatch[1],
-      param: doMatch[2],
-      command: doMatch[3],
-    };
+export function peek(context: ParserContext): Token {
+  return context.tokens[context.current];
+}
+
+export function peekNext(context: ParserContext): Token {
+  if (context.current + 1 >= context.tokens.length) {
+    return context.tokens[context.tokens.length - 1]; // Return EOF
+  }
+  return context.tokens[context.current + 1];
+}
+
+export function advance(context: ParserContext): Token {
+  if (!isAtEnd(context)) {
+    context.current++;
+  }
+  return context.tokens[context.current - 1];
+}
+
+export function check(context: ParserContext, type: TokenType): boolean {
+  if (isAtEnd(context)) return false;
+  return peek(context).type === type;
+}
+
+export function match(context: ParserContext, ...types: TokenType[]): boolean {
+  for (const type of types) {
+    if (check(context, type)) {
+      advance(context);
+      return true;
+    }
+  }
+  return false;
+}
+
+export function consume(context: ParserContext, type: TokenType, message: string): Token {
+  if (check(context, type)) return advance(context);
+  
+  const token = peek(context);
+  throw new Error(`${message} at line ${token.line}, got ${token.type} '${token.value}'`);
+}
+
+// Parser implementation
+function parseStatement(context: ParserContext): AstNode {
+  // Check for if statement
+  if (check(context, 'KEYWORD') && peek(context).value === 'if') {
+    return parseIfStatement(context);
   }
 
-  let cmdToParse = trimmedCmd;
-  if (cmdToParse.startsWith('(') && cmdToParse.endsWith(')')) {
-    cmdToParse = cmdToParse.slice(1, -1).trim();
+  // Check for variable assignment
+  if (check(context, 'IDENTIFIER') && peek(context).value.startsWith('$')) {
+    const varToken = peek(context);
+    const nextToken = peekNext(context);
+    
+    if (nextToken.type === 'OPERATOR' && nextToken.value === '=') {
+      return parseVariableAssignment(context);
+    }
   }
 
-  const logicalValue = tryParseBooleanExpression(cmdToParse);
-  if (logicalValue !== null) {
-    return { type: 'Literal', value: logicalValue };
+  // Check for do loop
+  if (check(context, 'IDENTIFIER') && peek(context).value.startsWith('$')) {
+    const varToken = peek(context);
+    const nextToken = peekNext(context);
+    
+    if (nextToken.type === 'SYMBOL' && nextToken.value === '.') {
+      const thirdToken = context.tokens[context.current + 2];
+      if (thirdToken && thirdToken.type === 'KEYWORD' && thirdToken.value === 'do') {
+        return parseDoLoop(context);
+      }
+    }
   }
 
-  // ✅ Fallback: comando normal
-  const parts = cmdToParse.split(" ");
-  if (parts.length > 0) {
-    return {
-      type: 'Command',
-      name: parts[0].toLowerCase(),
-      args: parts.slice(1).join(" ")
-    };
-  }
+  // Default to command
+  return parseCommand(context);
+}
 
-  return { type: 'Unknown', raw: commandString };
+function parseIfStatement(context: ParserContext): AstNode {
+  // Consume 'if'
+  consume(context, 'KEYWORD', "Expected 'if'");
+  
+  // Consume '('
+  consume(context, 'SYMBOL', "Expected '(' after 'if'");
+  
+  // Parse condition
+  const conditionTokens: Token[] = [];
+  let parenCount = 1;
+  
+  while (!isAtEnd(context) && parenCount > 0) {
+    const token = peek(context);
+    if (token.type === 'SYMBOL') {
+      if (token.value === '(') parenCount++;
+      else if (token.value === ')') parenCount--;
+    }
+    
+    if (parenCount > 0) {
+      conditionTokens.push(advance(context));
+    }
+  }
+  
+  // Consume ')'
+  consume(context, 'SYMBOL', "Expected ')' after condition");
+  
+  // Consume 'then'
+  consume(context, 'KEYWORD', "Expected 'then'");
+  
+  // Parse then block
+  consume(context, 'SYMBOL', "Expected '(' after 'then'");
+  const thenTokens: Token[] = [];
+  parenCount = 1;
+  
+  while (!isAtEnd(context) && parenCount > 0) {
+    const token = peek(context);
+    if (token.type === 'SYMBOL') {
+      if (token.value === '(') parenCount++;
+      else if (token.value === ')') parenCount--;
+    }
+    
+    if (parenCount > 0) {
+      thenTokens.push(advance(context));
+    }
+  }
+  
+  consume(context, 'SYMBOL', "Expected ')' after then block");
+  
+  // Parse else block if present
+  let elseBranch: AstNode | undefined;
+  if (check(context, 'KEYWORD') && peek(context).value === 'else') {
+    advance(context); // Consume 'else'
+    consume(context, 'SYMBOL', "Expected '(' after 'else'");
+    
+    const elseTokens: Token[] = [];
+    parenCount = 1;
+    
+    while (!isAtEnd(context) && parenCount > 0) {
+      const token = peek(context);
+      if (token.type === 'SYMBOL') {
+        if (token.value === '(') parenCount++;
+        else if (token.value === ')') parenCount--;
+      }
+      
+      if (parenCount > 0) {
+        elseTokens.push(advance(context));
+      }
+    }
+    
+    consume(context, 'SYMBOL', "Expected ')' after else block");
+    
+    // Parse else block
+    const elseContext = createParserContext(elseTokens);
+    elseBranch = parseStatement(elseContext);
+  }
+  
+  // Parse then block
+  const thenContext = createParserContext(thenTokens);
+  const thenBranch = parseStatement(thenContext);
+  
+  return {
+    type: 'IfStatement',
+    condition: conditionTokens.map(t => t.value).join(' '),
+    thenBranch,
+    elseBranch
+  };
+}
+
+function parseVariableAssignment(context: ParserContext): AstNode {
+  const varToken = advance(context); // Consume variable name
+  const varName = varToken.value.substring(1); // Remove '$'
+  
+  advance(context); // Consume '='
+  
+  // Parse value
+  const valueTokens: Token[] = [];
+  while (!isAtEnd(context) && !check(context, 'SEMICOLON')) {
+    valueTokens.push(advance(context));
+  }
+  
+  // Consume semicolon if present
+  if (check(context, 'SEMICOLON')) {
+    advance(context);
+  }
+  
+  const value = valueTokens.map(t => t.value).join(' ');
+  
+  return {
+    type: 'VariableAssignment',
+    name: varName,
+    value
+  };
+}
+
+function parseDoLoop(context: ParserContext): AstNode {
+  const collectionToken = advance(context); // Consume collection variable
+  const collection = collectionToken.value.substring(1); // Remove '$'
+  
+  advance(context); // Consume '.'
+  advance(context); // Consume 'do'
+  
+  consume(context, 'SYMBOL', "Expected '(' after 'do'");
+  consume(context, 'SYMBOL', "Expected '(' for parameter");
+  
+  const paramToken = advance(context); // Consume parameter
+  const param = paramToken.value;
+  
+  consume(context, 'SYMBOL', "Expected ')' after parameter");
+  consume(context, 'SYMBOL', "Expected '->'");
+  
+  // Parse command
+  const commandTokens: Token[] = [];
+  let parenCount = 1;
+  
+  while (!isAtEnd(context) && parenCount > 0) {
+    const token = peek(context);
+    if (token.type === 'SYMBOL') {
+      if (token.value === '(') parenCount++;
+      else if (token.value === ')') parenCount--;
+    }
+    
+    if (parenCount > 0) {
+      commandTokens.push(advance(context));
+    }
+  }
+  
+  consume(context, 'SYMBOL', "Expected ')' after command");
+  
+  const command = commandTokens.map(t => t.value).join(' ');
+  
+  return {
+    type: 'DoLoop',
+    collection,
+    param,
+    command
+  };
+}
+
+function parseCommand(context: ParserContext): AstNode {
+  const tokens: Token[] = [];
+  
+  while (!isAtEnd(context) && !check(context, 'SEMICOLON')) {
+    tokens.push(advance(context));
+  }
+  
+  // Consume semicolon if present
+  if (check(context, 'SEMICOLON')) {
+    advance(context);
+  }
+  
+  if (tokens.length === 0) {
+    return { type: 'Unknown', raw: '' };
+  }
+  
+  const commandName = tokens[0].value.toLowerCase();
+  const args = tokens.slice(1).map(t => t.value).join(' ');
+  
+  return {
+    type: 'Command',
+    name: commandName,
+    args
+  };
+}
+
+// Legacy function for backward compatibility
+export const parseCommandToAstNode = (commandString: string): AstNode => {
+  const lexer = new Lexer(commandString);
+  const tokens = lexer.tokenize();
+  const context = createParserContext(tokens);
+  
+  return parseStatement(context);
 };

@@ -1,14 +1,17 @@
 import React from "react";
 import {
   AstNode,
-  TerminalContext,
   CommandHistory,
   SubCommandContext,
   SectionInfo,
+  Token,
+  TokenType,
+  ParserContext,
 } from "./types";
-import { astNodeToString, cleanBranch, evaluateArithmetic, extractBlock } from "./utils";
+import {evaluateArithmetic, extractBlock } from "./utils";
 import { COMMAND_DEFINITIONS, processEchoArg } from "./command";
 import { ifRegex } from "./regex";
+import { Lexer, createParserContext, isAtEnd, peek, advance, check, match, consume } from "./lexer";
 
 const SECTIONS: Record<string, SectionInfo> = {
   home: { path: "/", description: "Home page - About Tomás" },
@@ -18,6 +21,114 @@ const SECTIONS: Record<string, SectionInfo> = {
   blog: { path: "/blog", description: "Latest blog posts and articles" },
   contact: { path: "/contact", description: "Contact information and links" },
 };
+
+// Token-based condition evaluator
+export const evaluateConditionFromTokens = (
+  tokens: Token[],
+  currentVariables: Record<string, any>
+): boolean => {
+  if (tokens.length === 0) return false;
+  
+  // Handle simple boolean literals
+  if (tokens.length === 1) {
+    const token = tokens[0];
+    if (token.type === 'IDENTIFIER') {
+      if (token.value === 'true') return true;
+      if (token.value === 'false') return false;
+      
+      // Variable reference
+      if (token.value.startsWith('$')) {
+        const varName = token.value.substring(1);
+        const value = currentVariables[varName];
+        if (value === undefined) return false;
+        if (typeof value === "boolean") return value;
+        if (typeof value === "number") return value !== 0 && !isNaN(value);
+        if (typeof value === "string") return value.length > 0;
+        if (Array.isArray(value)) return value.length > 0;
+        return !!value;
+      }
+    }
+    
+    if (token.type === 'NUMBER') {
+      return Number(token.value) !== 0;
+    }
+  }
+  
+  // Handle comparisons
+  if (tokens.length >= 3) {
+    const leftTokens = tokens.slice(0, -2);
+    const operator = tokens[tokens.length - 2];
+    const rightTokens = tokens.slice(-1);
+    
+    if (operator.type === 'OPERATOR' && ['==', '!=', '<', '>', '<=', '>='].includes(operator.value)) {
+      const leftValue = resolveTokenValue(leftTokens, currentVariables);
+      const rightValue = resolveTokenValue(rightTokens, currentVariables);
+      
+      switch (operator.value) {
+        case "==":
+          return leftValue == rightValue;
+        case "!=":
+          return leftValue != rightValue;
+        case "<":
+          return Number(leftValue) < Number(rightValue);
+        case ">":
+          return Number(leftValue) > Number(rightValue);
+        case "<=":
+          return Number(leftValue) <= Number(rightValue);
+        case ">=":
+          return Number(leftValue) >= Number(rightValue);
+      }
+    }
+  }
+  
+  // Try to evaluate as arithmetic expression
+  const expression = tokens.map(t => t.value).join(' ');
+  const arithmeticResult = evaluateArithmetic(expression);
+  if (!arithmeticResult.error && typeof arithmeticResult.value === "number") {
+    return arithmeticResult.value !== 0;
+  }
+  
+  return false;
+};
+
+// Helper to resolve token values
+function resolveTokenValue(tokens: Token[], variables: Record<string, any>): any {
+  if (tokens.length === 1) {
+    const token = tokens[0];
+    
+    if (token.type === 'STRING') {
+      return token.value;
+    }
+    
+    if (token.type === 'NUMBER') {
+      return Number(token.value);
+    }
+    
+    if (token.type === 'IDENTIFIER') {
+      if (token.value.startsWith('$')) {
+        const varName = token.value.substring(1);
+        if (!(varName in variables)) {
+          throw new Error(`Undefined variable: '$${varName}' in condition`);
+        }
+        return variables[varName];
+      }
+      
+      // Try as variable name without $
+      if (token.value in variables) {
+        return variables[token.value];
+      }
+      
+      return token.value;
+    }
+  }
+  
+  const expression = tokens.map(t => t.value).join(' ');
+  const result = evaluateArithmetic(expression);
+  if (result.error) {
+    throw new Error(`Invalid expression: ${result.error}`);
+  }
+  return result.value;
+}
 
 export const evaluateCondition = (
   condition: string,
@@ -41,11 +152,9 @@ export const evaluateCondition = (
         return currentVariables[varName];
       }
 
-      // Try to evaluate as arithmetic
       const arithmeticResult = evaluateArithmetic(expr);
       if (!arithmeticResult.error) return arithmeticResult.value;
 
-      // Try parsing as string
       if (
         (expr.startsWith('"') && expr.endsWith('"')) ||
         (expr.startsWith("'") && expr.endsWith("'"))
@@ -109,105 +218,146 @@ export const evaluateCondition = (
   return false;
 };
 
-// Helper for simulated command execution (no side effects on actual state)
+// Enhanced sub-command executor with token-based parsing
 export const executeSimulatedSubCommand = (
   subCmd: string,
   context: SubCommandContext
 ): string[] => {
   const trimmedSubCmd = subCmd.trim();
   if (!trimmedSubCmd) return [""];
-  console.log(trimmedSubCmd)
 
-  // 🌟 Handle IF THEN ELSE
-  const match = trimmedSubCmd.match(ifRegex);
-  if (match) {
-    const conditionStr = match[1].trim();
-    const afterThen = trimmedSubCmd.slice(match[0].length).trim();
+  try {
+    // Use new token-based parser
+    const lexer = new Lexer(trimmedSubCmd);
+    const tokens = lexer.tokenize();
     
-    const thenBlockResult = extractBlock(afterThen);
-    if (!thenBlockResult) {
-      return ["Error: bloque THEN no válido o no cerrado"];
+    // Check for IF statement using tokens
+    if (tokens.length > 0 && tokens[0].type === 'KEYWORD' && tokens[0].value === 'if') {
+      return executeIfStatementFromTokens(tokens, context);
     }
-
-    let restAfterThen = thenBlockResult.rest.trim();
-
-    let elseBlockResult = null;
-    if (restAfterThen.toLowerCase().startsWith("else")) {
-      const afterElse = restAfterThen.slice(4).trim();
-      elseBlockResult = extractBlock(afterElse);
-      if (!elseBlockResult) {
-        return ["Error: bloque ELSE no válido o no cerrado"];
-      }
+    
+    // Fallback to old regex-based approach for compatibility
+    const match = trimmedSubCmd.match(ifRegex);
+    if (match) {
+      return executeIfStatementLegacy(match, trimmedSubCmd, context);
     }
+    
+    // Handle other commands
+    return executeCommandFromTokens(tokens, context);
+  } catch (error: any) {
+    return [`Error parsing command: ${error.message}`];
+  }
+};
 
-    let conditionResult: boolean;
-    try {
-      conditionResult = evaluateCondition(conditionStr, context.variables);
-    } catch (e: any) {
-      return [`Error evaluando condición: ${e.message}`];
+// New token-based IF statement executor
+function executeIfStatementFromTokens(
+  tokens: Token[],
+  context: SubCommandContext
+): string[] {
+  // This is a simplified version - in a full implementation,
+  // you would parse the complete IF structure from tokens
+  // For now, we'll fall back to the legacy approach
+  return executeIfStatementLegacy(null, tokens.map(t => t.value).join(' '), context);
+}
+
+// Legacy IF statement executor
+function executeIfStatementLegacy(
+  match: RegExpMatchArray | null,
+  trimmedSubCmd: string,
+  context: SubCommandContext
+): string[] {
+  if (!match) {
+    // Try to parse manually from tokens
+    const ifMatch = trimmedSubCmd.match(ifRegex);
+    if (!ifMatch) {
+      return ["Error: Invalid IF statement syntax"];
     }
-
-    const selectedBlock = conditionResult
-      ? thenBlockResult.block.trim()
-      : elseBlockResult
-      ? elseBlockResult.block.trim()
-      : "";
-
-    if (!selectedBlock) {
-      return [
-        `Condición ${conditionResult} pero no se proveyó la rama correspondiente.`,
-      ];
-    }
-
-    // Ejecuta recursivamente el contenido seleccionado
-    return executeSimulatedSubCommand(selectedBlock, context);
+    match = ifMatch;
   }
 
-  // 🌟 Handle variable assignment simulation
-  if (trimmedSubCmd.includes("=") && trimmedSubCmd.startsWith("$")) {
-    // ... tu código existente para asignación de variables ...
-    // (sin cambios aquí)
+  const conditionStr = match[1].trim();
+  const afterThen = trimmedSubCmd.slice(match[0].length).trim();
+  
+  const thenBlockResult = extractBlock(afterThen);
+  if (!thenBlockResult) {
+    return ["Error: bloque THEN no válido o no cerrado"];
   }
 
-  // 🌟 Base command execution — strip brackets if present
-  const commandLine = trimmedSubCmd.replace(/^\[|\]$/g, "").trim();
+  let restAfterThen = thenBlockResult.rest.trim();
 
-  const [command, ...args] = commandLine.split(" ");
-  const arg = args.join(" ");
-  let subOutput: string[] = [];
+  let elseBlockResult = null;
+  if (restAfterThen.toLowerCase().startsWith("else")) {
+    const afterElse = restAfterThen.slice(4).trim();
+    elseBlockResult = extractBlock(afterElse);
+    if (!elseBlockResult) {
+      return ["Error: bloque ELSE no válido o no cerrado"];
+    }
+  }
 
-  switch (command.toLowerCase()) {
+  let conditionResult: boolean;
+  try {
+    conditionResult = evaluateCondition(conditionStr, context.variables);
+  } catch (e: any) {
+    return [`Error evaluando condición: ${e.message}`];
+  }
+
+  const selectedBlock = conditionResult
+    ? thenBlockResult.block.trim()
+    : elseBlockResult
+    ? elseBlockResult.block.trim()
+    : "";
+
+  if (!selectedBlock) {
+    return [
+      `Condición ${conditionResult} pero no se proveyó la rama correspondiente.`,
+    ];
+  }
+
+  // Execute recursively the selected content
+  return executeSimulatedSubCommand(selectedBlock, context);
+}
+
+// Token-based command executor
+function executeCommandFromTokens(
+  tokens: Token[],
+  context: SubCommandContext
+): string[] {
+  if (tokens.length === 0) return [""];
+  
+  const commandToken = tokens[0];
+  if (commandToken.type !== 'IDENTIFIER' && commandToken.type !== 'KEYWORD') {
+    return [`Error: Expected command name, got ${commandToken.type}`];
+  }
+  
+  const command = commandToken.value.toLowerCase();
+  const args = tokens.slice(1).map(t => t.value).join(' ');
+  
+  switch (command) {
     case "echo":
-      subOutput = [
-        processEchoArg(arg, context.variables, context.evaluateArithmetic),
-      ];
-      break;
+      return [processEchoArg(args, context.variables, context.evaluateArithmetic)];
     case "cd":
-      if (!arg) {
-        subOutput = [
+      if (!args) {
+        return [
           "Usage: cd <section>",
           "Available sections: " + Object.keys(context.sections).join(", "),
         ];
-      } else if (arg === "..") {
-        subOutput = [`Would navigate to: ${context.sections.home.path}`];
-      } else if (arg in context.sections) {
-        subOutput = [
+      } else if (args === "..") {
+        return [`Would navigate to: ${context.sections.home.path}`];
+      } else if (args in context.sections) {
+        return [
           `Would navigate to: ${
-            context.sections[arg as keyof typeof context.sections].path
+            context.sections[args as keyof typeof context.sections].path
           }`,
         ];
       } else {
-        subOutput = [`cd: ${arg}: No such section (in simulation)`];
+        return [`cd: ${args}: No such section (in simulation)`];
       }
-      break;
     case "pwd":
-      subOutput = [`Simulated current path: ${context.currentSection}`];
-      break;
+      return [`Simulated current path: ${context.currentSection}`];
     case "date":
-      subOutput = [`Simulated current date: ${new Date().toString()}`];
-      break;
+      return [`Simulated current date: ${new Date().toString()}`];
     case "unset":
-      let varName = arg.replace(/;+/g, "").trim();
+      let varName = args.replace(/;+/g, "").trim();
       if (varName.startsWith("$")) {
         varName = varName.substring(1);
       }
@@ -216,16 +366,15 @@ export const executeSimulatedSubCommand = (
         /^[a-zA-Z]/.test(varName) &&
         varName in context.variables
       ) {
-        subOutput = [`Would remove variable '$${varName}'.`];
+        return [`Would remove variable '$${varName}'.`];
       } else {
-        subOutput = [`Variable '$${varName}' not found (in simulation).`];
+        return [`Variable '$${varName}' not found (in simulation).`];
       }
-      break;
     case "vars":
       if (Object.keys(context.variables).length === 0) {
-        subOutput = ["No variables defined in main scope."];
+        return ["No variables defined in main scope."];
       } else {
-        subOutput = [
+        return [
           "Current variables in main scope (for simulation):",
           "",
           ...Object.entries(context.variables).map(([name, value]) => {
@@ -243,17 +392,14 @@ export const executeSimulatedSubCommand = (
           }),
         ];
       }
-      break;
     default:
-      subOutput = [
-        `Simulated command '${commandLine}' is not directly supported in this context.`,
+      return [
+        `Simulated command '${command} ${args}' is not directly supported in this context.`,
       ];
   }
+}
 
-  return subOutput;
-};
-
-// Main interpreter function
+// Main interpreter function - refactored for scalability
 export const interpretAstNode = (
   node: AstNode,
   context: {
@@ -261,9 +407,8 @@ export const interpretAstNode = (
     router: any;
     variables: Record<string, any>;
     setVariables: React.Dispatch<React.SetStateAction<Record<string, any>>>;
-    setHistory: React.Dispatch<React.SetStateAction<CommandHistory[]>>; // For 'clear' etc.
-    commandHistory: string[]; // For 'history' command
-    setIsOpen: React.Dispatch<React.SetStateAction<boolean>>; // For 'exit'
+    setHistory: React.Dispatch<React.SetStateAction<CommandHistory[]>>;
+    setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   }
 ): string[] => {
   const output: string[] = [];
@@ -273,11 +418,8 @@ export const interpretAstNode = (
     variables,
     setVariables,
     setHistory,
-    commandHistory,
     setIsOpen,
   } = context;
-  console.log(node)
-  
 
   // Context for SIMULATED commands (read-only for variables, no direct state changes)
   const simulatedContext: SubCommandContext = {
@@ -290,18 +432,19 @@ export const interpretAstNode = (
   try {
     switch (node.type) {
       case "Literal": 
-        return node.value
+        return [String(node.value)];
+        
       case "IfStatement":
-  let conditionResult = evaluateCondition(node.condition, variables);
+        let conditionResult = evaluateCondition(node.condition, variables);
 
-  if (conditionResult) {
-    return interpretAstNode(node.thenBranch, context);
-  } else if (node.elseBranch) {
-    return interpretAstNode(node.elseBranch, context);
-  } else {
-    output.push(`-> Condition is FALSE, no 'else' block found.`);
-  }
-  break;
+        if (conditionResult) {
+          return interpretAstNode(node.thenBranch, context);
+        } else if (node.elseBranch) {
+          return interpretAstNode(node.elseBranch, context);
+        } else {
+          output.push(`-> Condition is FALSE, no 'else' block found.`);
+        }
+        break;
 
       case "VariableAssignment":
         const varName = node.name;
@@ -579,8 +722,6 @@ export const interpretAstNode = (
             variables,
             setVariables,
             setHistory,
-            commandHistory,
-            setIsOpen,
           });
           output.push(...commandOutput);
         } else {
@@ -594,8 +735,6 @@ export const interpretAstNode = (
           );
         }
         break;
-      case "Literal":
-          return   node.value;
 
       case "Unknown":
         output.push(
@@ -603,8 +742,9 @@ export const interpretAstNode = (
           "Type 'help' for available commands."
         );
         break;
+        
       default:
-        output.push(`Unexpected command type: ${node.type}`);
+        output.push(`Unexpected command type: ${(node as any).type}`);
         break;
     }
   } catch (error) {

@@ -85,7 +85,7 @@ export default function Terminal({ currentSection, onNavigate = () => {} }: Term
     (cmd: string) => {
       const trimmedCmd = cmd.trim()
       if (!trimmedCmd) return
-
+      console.log(trimmedCmd)
       setCommandHistory((prev) => [...prev, trimmedCmd])
 
       const astNode = parseCommandToAstNode(trimmedCmd); 
