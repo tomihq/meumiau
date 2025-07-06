@@ -314,7 +314,11 @@ export const COMMAND_DEFINITIONS: Record<string, CommandDefinition> = {
             return newVars;
           });
           return [`Variable '$${varName}' removed.`];
-        } else {
+        }else if(varName === 'all'){
+          setVariables({});
+          return [`All variables removed.`];
+        } 
+        else {
           return [`Variable '$${varName}' not found.`];
         }
       }

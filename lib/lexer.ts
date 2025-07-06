@@ -40,12 +40,27 @@ export const parseCommandToAstNode = (commandString: string): AstNode => {
 }
 
   // ✅ Variable assignment: $x = 5
-  if (trimmedCmd.includes("=") && trimmedCmd.startsWith("$")) {
-    const match = trimmedCmd.match(/^\$(\w+)\s*=\s*(.+)$/);
-    if (match) {
-      return { type: 'VariableAssignment', name: match[1], value: match[2] };
+ if (trimmedCmd.includes("=") && trimmedCmd.startsWith("$")) {
+  const match = trimmedCmd.match(/^\$(\w+)\s*=\s*(.+)$/);
+  if (match) {
+    let value = match[2].trim();
+
+    const semicolonCount = (value.match(/;/g) || []).length;
+
+    if (semicolonCount > 1) {
+      throw new Error("Syntax error: multiple ';' characters in assignment value");
     }
+
+    if (semicolonCount === 1) {
+      if (!/;(\s*)$/.test(value)) {
+        throw new Error("Syntax error: ';' found inside assignment value, only allowed at end");
+      }
+      value = value.replace(/;(\s*)$/, "").trim();
+    }
+
+    return { type: 'VariableAssignment', name: match[1], value };
   }
+}
 
   // ✅ Do-loop: $list.do((x) -> ...)
   const doMatch = trimmedCmd.match(/^\$(\w+)\.do\(\(([^)]+)\)\s*->\s*(.+)\)$/);

@@ -86,14 +86,10 @@ export default function Terminal({ currentSection, onNavigate = () => {} }: Term
       const trimmedCmd = cmd.trim()
       if (!trimmedCmd) return
 
-      // Add to internal command history (for arrow keys)
       setCommandHistory((prev) => [...prev, trimmedCmd])
-      setHistoryIndex(-1) // Reset history index after executing new command
 
-      // --- Core Logic: Lex, Parse, Interpret ---
-      const astNode = parseCommandToAstNode(trimmedCmd); // Lex and get AST-like node
+      const astNode = parseCommandToAstNode(trimmedCmd); 
 
-      // Prepare the context for the interpreter (real side effects)
       const executionContext = {
         currentSection,
         router,
@@ -103,7 +99,6 @@ export default function Terminal({ currentSection, onNavigate = () => {} }: Term
         commandHistory, // Pass for 'history' command
         setIsOpen, // Pass for 'exit' command
       };
-      console.log(astNode)
       const commandOutput = interpretAstNode(astNode, executionContext); // Interpret/Execute
 
       // Add the command and its output to the display history
