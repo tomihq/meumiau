@@ -3,9 +3,11 @@ import { Code } from 'lucide-react';
 import React from 'react';
 import NavLinks from './nav-links';
 import SocialButtons from './social-buttons';
+import MusicPlayer from './music-player';
 
 const Nav = () => {
   return (
+    <div >
     <nav className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-black/20 backdrop-blur-md rounded-full border border-purple-500/30 px-3 md:px-6 py-3 max-w-[95vw] md:max-w-none overflow-x-auto">
       <div className="flex items-center gap-3 md:gap-6 min-w-max">
         <div className="flex items-center gap-2 mr-2 md:mr-4">
@@ -18,6 +20,10 @@ const Nav = () => {
         <SocialButtons/>
       </div>
     </nav>
+        <MusicPlayer />
+
+    </div>
+
   );
 };
 

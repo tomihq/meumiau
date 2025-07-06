@@ -11,6 +11,7 @@ import {
   Coffee,
 } from "lucide-react"
 import Image from "next/image";
+import ArgentinaClock from "@/components/argentina-clock";
 
 export const dynamic = "force-static";
 export default function HomePage() {
@@ -26,7 +27,7 @@ export default function HomePage() {
                   <Image src={"/tom2.png"} alt={"tom"} layout="fill" className={"rounded-full"}/>
                 </div>
               </div>
-              <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-300 rounded-full flex items-center justify-center animate-bounce">
+              <div className="absolute -top-2 -right-2 w-8 h-8 bg-transparent rounded-full flex items-center justify-center animate-bounce">
                 ✨
               </div>
             </div>
@@ -38,7 +39,7 @@ export default function HomePage() {
           <span className="text-yellow-400 text-6xl ml-2 inline-block">✨</span>
 
           <p className="text-2xl text-purple-300 mb-6 font-mono">Computer Scientist</p>
-
+          <ArgentinaClock />
           <Card className="max-w-2xl mx-auto bg-black/20 backdrop-blur-md border-purple-500/30">
             <CardContent className="p-6">
               <div className="flex items-center gap-2 mb-4">

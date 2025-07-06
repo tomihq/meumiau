@@ -184,7 +184,7 @@ export default function Terminal({ currentSection, onNavigate = () => {} }: Term
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 right-4 z-50 bg-slate-800/70 hover:bg-black/90 border border-purple-500/50 text-purple-400 font-mono"
+        className="fixed bottom-4 right-4 z-50 bg-slate-800/80 md:bg-transparent hover:bg-black/90 border border-purple-500/50 text-purple-400 font-mono"
         size="sm"
       >
         <TerminalIcon className="w-4 h-4 mr-2" />
@@ -196,7 +196,7 @@ export default function Terminal({ currentSection, onNavigate = () => {} }: Term
   return (
     <div className="fixed inset-4 z-50 flex items-center justify-center pointer-events-none">
       <Card
-        className={`w-full max-w-4xl bg-slate-900/90 border-purple-500/50 font-mono text-sm pointer-events-auto transition-all duration-300 ${
+        className={`w-full max-w-4xl bg-slate-900/90 border-purple-500/50 font-mono text-sm pointer-events-auto transition-all duration-300  ${
           isMinimized ? "h-12" : "h-96"
         }`}
       >

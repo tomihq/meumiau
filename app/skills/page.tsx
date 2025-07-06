@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Triangle } from "lucide-react";
 export const dynamic = "force-static";
 export default function SkillsPage() {
   return (
@@ -56,14 +57,14 @@ export default function SkillsPage() {
                   className="bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 transition-colors"
                 >
                   <span className="mr-2">🐘</span>
-                  PHP (Vanilla)
+                  PHP
                 </Badge>
                 <Badge
                   variant="secondary"
                   className="bg-green-500/20 text-green-300 hover:bg-green-500/30 transition-colors"
                 >
                   <span className="mr-2">🐍</span>
-                  Python (Django)
+                  Python 
                 </Badge>
                 <Badge
                   variant="secondary"
@@ -77,7 +78,7 @@ export default function SkillsPage() {
                   className="bg-pink-500/20 text-pink-300 hover:bg-pink-500/30 transition-colors"
                 >
                   <span className="mr-2">λ</span>
-                  Haskell (Lambda Calculus)
+                  Haskell 
                 </Badge>
               </div>
             </CardContent>
@@ -104,14 +105,14 @@ export default function SkillsPage() {
                   className="bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30 transition-colors"
                 >
                   <span className="mr-2">⚛️</span>
-                  React (SPA)
+                  React 
                 </Badge>
                 <Badge
                   variant="secondary"
                   className="bg-gray-500/20 text-gray-300 hover:bg-gray-500/30 transition-colors"
                 >
                   <span className="mr-2">▲</span>
-                  Next.js (from v11)
+                  Next.js 
                 </Badge>
                 <Badge
                   variant="secondary"
@@ -181,6 +182,7 @@ export default function SkillsPage() {
                   <span className="mr-2">🔧</span>
                   NGINX, PM2
                 </Badge>
+                 
               </div>
             </CardContent>
           </Card>
@@ -232,6 +234,8 @@ export default function SkillsPage() {
                   <span className="mr-2">🧪</span>
                   Jest, Selenium
                 </Badge>
+                
+                
               </div>
             </CardContent>
           </Card>

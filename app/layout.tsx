@@ -3,7 +3,6 @@ import "./globals.css";
 import Nav from "@/components/nav";
 import Footer from "@/components/footer";
 import BackgroundPattern from "@/components/background-pattern";
-import MusicPlayer from "@/components/music-player";
 import TerminalWrapper from "@/components/terminal-wrapper";
 
 import { Roboto, Montserrat } from 'next/font/google'
@@ -36,9 +35,8 @@ export default function RootLayout({
     <html lang="en">
       <body className={` ${roboto.variable} ${montserrat.variable} font-sans bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white relative`} >
         <BackgroundPattern />
-        <MusicPlayer />
         <TerminalWrapper/>
-        <Nav />
+           <Nav />
         {children}
         <Footer />
       </body>

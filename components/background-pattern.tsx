@@ -71,7 +71,7 @@ const BackgroundPattern = () => {
       symbol: symbols[Math.floor(Math.random() * symbols.length)],
       delay: Math.random() * 8,
       duration: 4 + Math.random() * 4,
-      size: 0.8 + Math.random() * 1.2,
+      size: 0.8 + Math.random() * 1.3,
     }))
     setParticles(newParticles)
   }, [])

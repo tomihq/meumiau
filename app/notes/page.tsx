@@ -6,31 +6,13 @@ export const dynamic = "force-static";
 const sampleNotes = [
   {
     id: 1,
-    slug: "gradiente-descendente-ml",
-    title: "Gradiente Descendente en ML",
-    category: "mathematics",
-    tags: ["calculus", "ml", "optimization"],
-    date: "2024-01-15",
-    excerpt: "El algoritmo fundamental para optimizar funciones de costo en machine learning.",
-  },
-  {
-    id: 2,
-    slug: "big-o-notation",
-    title: "Big O Notation Explicada",
+    slug: "c-plus-plus-basics",
+    title: "C++ Basics",
     category: "technology",
-    tags: ["algorithms", "complexity"],
-    date: "2024-01-10",
-    excerpt: "La notación Big O describe cómo crece el tiempo de ejecución de un algoritmo.",
-  },
-  {
-    id: 3,
-    slug: "distribuciones-probabilidad",
-    title: "Distribuciones de Probabilidad",
-    category: "mathematics",
-    tags: ["probability", "statistics"],
-    date: "2024-01-05",
-    excerpt: "Las distribuciones modelan la incertidumbre en datos y predicciones.",
-  },
+   tags: ["cpp", "programming-basics", "compilers", "types", "control-flow"],
+    date: "2024-07-22",
+  }
+  
 ]
 
 const categoryIcons = {
