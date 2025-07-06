@@ -12,49 +12,46 @@ const SECTIONS: Record<string, SectionInfo> = {
   contact: { path: "/contact", description: "Contact information and links" },
 };
 
+import { evaluateArithmetic } from './utils';
 
 const evaluateCondition = (condition: string, currentVariables: Record<string, any>): boolean => {
   if (condition.toLowerCase() === "true") return true;
   if (condition.toLowerCase() === "false") return false;
 
-  const comparisonMatch = condition.match(/^(.+?)\s*([=!<>]=|<=|>=)\s*(.+)$/);
+  const comparisonMatch = condition.match(/^(.+?)\s*([=!<>]=|<|>)\s*(.+)$/);
   if (comparisonMatch) {
     const leftExpr = comparisonMatch[1].trim();
     const operator = comparisonMatch[2];
     const rightExpr = comparisonMatch[3].trim();
 
-    let leftValue: any;
-    let rightValue: any;
+    const resolveOperand = (expr: string): any => {
+      if (expr.startsWith("$")) {
+        const varName = expr.substring(1);
+        if (!(varName in currentVariables)) {
+          throw new Error(`Undefined variable: '$${varName}' in condition`);
+        }
+        return currentVariables[varName];
+      }
 
-    if (leftExpr.startsWith("$")) {
-      const varName = leftExpr.substring(1);
-      if (varName in currentVariables) {
-        leftValue = currentVariables[varName];
-      } else {
-        throw new Error(`Undefined variable: '$${varName}' in condition`);
-      }
-    } else {
-      const arithmeticResult = evaluateArithmetic(leftExpr);
-      if (!arithmeticResult.error) {
-        leftValue = arithmeticResult.value;
-      } else {
-        leftValue = leftExpr.replace(/^["']|["']$/g, "");
-      }
-    }
+      // Try to evaluate as arithmetic
+      const arithmeticResult = evaluateArithmetic(expr);
+      if (!arithmeticResult.error) return arithmeticResult.value;
 
-    if (rightExpr.startsWith("$")) {
-      const varName = rightExpr.substring(1);
-      if (varName in currentVariables) {
-        rightValue = currentVariables[varName];
-      } else {
-        throw new Error(`Undefined variable: '$${varName}' in condition`);
+      // Try parsing as string
+      if ((expr.startsWith('"') && expr.endsWith('"')) || (expr.startsWith("'") && expr.endsWith("'"))) {
+        return expr.slice(1, -1);
       }
-    } else {
-      const arithmeticResult = evaluateArithmetic(rightExpr);
-      if (!arithmeticResult.error) {
-        rightValue = arithmeticResult.value;
-      } else {
-        rightValue = rightExpr.replace(/^["']|["']$/g, "");
+
+      return expr;
+    };
+
+    let leftValue = resolveOperand(leftExpr);
+    let rightValue = resolveOperand(rightExpr);
+
+    // Force number comparison if using arithmetic operators
+    if (["<", ">", "<=", ">="].includes(operator)) {
+      if (typeof leftValue !== "number" || typeof rightValue !== "number") {
+        throw new TypeError(`Both operands must be numbers for operator '${operator}'`);
       }
     }
 
@@ -69,19 +66,19 @@ const evaluateCondition = (condition: string, currentVariables: Record<string, a
     }
   }
 
+  // Simple truthiness check
   if (condition.startsWith("$")) {
     const varName = condition.substring(1);
-    if (varName in currentVariables) {
-      const value = currentVariables[varName];
-      if (typeof value === "boolean") return value;
-      if (typeof value === "number") return value !== 0 && !isNaN(value);
-      if (typeof value === "string") return value.length > 0;
-      if (Array.isArray(value)) return value.length > 0;
-      return !!value;
-    }
-    return false;
+    const value = currentVariables[varName];
+    if (value === undefined) return false;
+    if (typeof value === "boolean") return value;
+    if (typeof value === "number") return value !== 0 && !isNaN(value);
+    if (typeof value === "string") return value.length > 0;
+    if (Array.isArray(value)) return value.length > 0;
+    return !!value;
   }
 
+  // Try to evaluate as arithmetic expression
   const arithmeticResult = evaluateArithmetic(condition);
   if (!arithmeticResult.error && typeof arithmeticResult.value === "number") {
     return arithmeticResult.value !== 0;
@@ -89,6 +86,7 @@ const evaluateCondition = (condition: string, currentVariables: Record<string, a
 
   return false;
 };
+
 
 // Helper for simulated command execution (no side effects on actual state)
 export const executeSimulatedSubCommand = (
