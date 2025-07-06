@@ -168,9 +168,58 @@ export function testIfAsValue() {
   });
 }
 
+// Test help instructionsAvailable command
+export function testHelpInstructions() {
+  console.log("🧪 Testing help instructionsAvailable...\n");
+  
+  const mockContext = {
+    currentSection: 'home',
+    router: { push: (path: string) => console.log(`Navigate to: ${path}`) },
+    variables: {},
+    setVariables: (fn: any) => console.log('Variables updated'),
+    setHistory: (fn: any) => console.log('History updated'),
+    setIsOpen: (fn: any) => console.log('Terminal state updated'),
+  };
+  
+  const testCommands = [
+    "help",
+    "help instructionsAvailable"
+  ];
+  
+  testCommands.forEach((testCommand, index) => {
+    console.log(`Test ${index + 1}: "${testCommand}"`);
+    
+    try {
+      const astNode = parseCommandToAstNode(testCommand);
+      console.log(`AST type: ${astNode.type}`);
+      
+      if (astNode.type === 'Command') {
+        console.log(`Command: ${astNode.name}`);
+        console.log(`Args: "${astNode.args}"`);
+      }
+      
+      const output = interpretAstNode(astNode, mockContext);
+      console.log(`Output lines: ${output.length}`);
+      console.log(`First few lines:`);
+      output.slice(0, 5).forEach((line, i) => {
+        console.log(`  ${i + 1}: ${line}`);
+      });
+      if (output.length > 5) {
+        console.log(`  ... and ${output.length - 5} more lines`);
+      }
+      
+    } catch (error) {
+      console.log(`❌ Error: ${error}`);
+    }
+    
+    console.log('');
+  });
+}
+
 // Run tests if this file is executed directly
 if (require.main === module) {
   testParser();
   testInterpreter();
   testIfAsValue();
+  testHelpInstructions();
 } 

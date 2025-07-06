@@ -71,6 +71,7 @@ echo Hello World
 cd home
 pwd
 vars
+help instructionsAvailable  # Guía completa del lenguaje
 ```
 
 ### 3. Declaraciones IF
