@@ -103,7 +103,7 @@ export default function Terminal({ currentSection, onNavigate = () => {} }: Term
         commandHistory, // Pass for 'history' command
         setIsOpen, // Pass for 'exit' command
       };
-
+      console.log(astNode)
       const commandOutput = interpretAstNode(astNode, executionContext); // Interpret/Execute
 
       // Add the command and its output to the display history
@@ -248,15 +248,21 @@ export default function Terminal({ currentSection, onNavigate = () => {} }: Term
                   <div className="text-purple-300">
                     <span className="text-blue-400">{getPrompt()}</span> {entry.command}
                   </div>
-                  {entry.output.map((line, lineIndex) => (
-                    <div
-                      key={lineIndex}
-                      className={`pl-2 ${line.includes("\x1b[31m") ? "text-red-400" : "text-gray-300"}`}
-                      dangerouslySetInnerHTML={{
-                        __html: line.replace(/\x1b\[31m/g, "").replace(/\x1b\[0m/g, ""),
-                      }}
-                    />
-                  ))}
+                 {(Array.isArray(entry.output) ? entry.output : [String(entry.output)]).map(
+  (line, lineIndex) => (
+    <div
+      key={lineIndex}
+      className={`pl-2 ${
+        line.includes("\x1b[31m") ? "text-red-400" : "text-gray-300"
+      }`}
+      dangerouslySetInnerHTML={{
+        __html: line
+          .replace(/\x1b\[31m/g, "")
+          .replace(/\x1b\[0m/g, ""),
+      }}
+    />
+  )
+)}
                 </div>
               ))}
             </div>

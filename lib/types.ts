@@ -19,9 +19,10 @@ export interface TerminalContext {
 export type AstNode =
   | { type: 'Command'; name: string; args: string }
   | { type: 'VariableAssignment'; name: string; value: string }
-  | { type: 'IfStatement'; condition: string; thenBranch: string; elseBranch?: string }
+  | { type: 'IfStatement'; condition: string; thenBranch: AstNode; elseBranch?: AstNode }
   | { type: 'DoLoop'; collection: string; param: string; command: string }
-  | { type: 'Unknown'; raw: string };
+  | { type: 'Unknown'; raw: string }
+  | { type: "Literal"; value: any };
 
 export interface CommandDefinition {
   description: string;

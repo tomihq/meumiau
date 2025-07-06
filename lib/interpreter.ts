@@ -1,7 +1,14 @@
-import React from 'react'; 
-import { AstNode, TerminalContext, CommandHistory, SubCommandContext, SectionInfo } from './types';
-import { evaluateArithmetic } from './utils';
-import { COMMAND_DEFINITIONS, processEchoArg } from './command';
+import React from "react";
+import {
+  AstNode,
+  TerminalContext,
+  CommandHistory,
+  SubCommandContext,
+  SectionInfo,
+} from "./types";
+import { astNodeToString, cleanBranch, evaluateArithmetic, extractBlock } from "./utils";
+import { COMMAND_DEFINITIONS, processEchoArg } from "./command";
+import { ifRegex } from "./regex";
 
 const SECTIONS: Record<string, SectionInfo> = {
   home: { path: "/", description: "Home page - About Tomás" },
@@ -12,9 +19,10 @@ const SECTIONS: Record<string, SectionInfo> = {
   contact: { path: "/contact", description: "Contact information and links" },
 };
 
-import { evaluateArithmetic } from './utils';
-
-const evaluateCondition = (condition: string, currentVariables: Record<string, any>): boolean => {
+export const evaluateCondition = (
+  condition: string,
+  currentVariables: Record<string, any>
+): boolean => {
   if (condition.toLowerCase() === "true") return true;
   if (condition.toLowerCase() === "false") return false;
 
@@ -38,7 +46,10 @@ const evaluateCondition = (condition: string, currentVariables: Record<string, a
       if (!arithmeticResult.error) return arithmeticResult.value;
 
       // Try parsing as string
-      if ((expr.startsWith('"') && expr.endsWith('"')) || (expr.startsWith("'") && expr.endsWith("'"))) {
+      if (
+        (expr.startsWith('"') && expr.endsWith('"')) ||
+        (expr.startsWith("'") && expr.endsWith("'"))
+      ) {
         return expr.slice(1, -1);
       }
 
@@ -50,19 +61,30 @@ const evaluateCondition = (condition: string, currentVariables: Record<string, a
 
     // Force number comparison if using arithmetic operators
     if (["<", ">", "<=", ">="].includes(operator)) {
+       leftValue = Number(leftValue);
+  rightValue = Number(rightValue);
       if (typeof leftValue !== "number" || typeof rightValue !== "number") {
-        throw new TypeError(`Both operands must be numbers for operator '${operator}'`);
+        throw new TypeError(
+          `Both operands must be numbers for operator '${operator}'`
+        );
       }
     }
 
     switch (operator) {
-      case "==": return leftValue == rightValue;
-      case "!=": return leftValue != rightValue;
-      case "<": return leftValue < rightValue;
-      case ">": return leftValue > rightValue;
-      case "<=": return leftValue <= rightValue;
-      case ">=": return leftValue >= rightValue;
-      default: throw new Error(`Unsupported comparison operator: ${operator}`);
+      case "==":
+        return leftValue == rightValue;
+      case "!=":
+        return leftValue != rightValue;
+      case "<":
+        return leftValue < rightValue;
+      case ">":
+        return leftValue > rightValue;
+      case "<=":
+        return leftValue <= rightValue;
+      case ">=":
+        return leftValue >= rightValue;
+      default:
+        throw new Error(`Unsupported comparison operator: ${operator}`);
     }
   }
 
@@ -87,7 +109,6 @@ const evaluateCondition = (condition: string, currentVariables: Record<string, a
   return false;
 };
 
-
 // Helper for simulated command execution (no side effects on actual state)
 export const executeSimulatedSubCommand = (
   subCmd: string,
@@ -95,87 +116,86 @@ export const executeSimulatedSubCommand = (
 ): string[] => {
   const trimmedSubCmd = subCmd.trim();
   if (!trimmedSubCmd) return [""];
+  console.log(trimmedSubCmd)
 
-  // Handle variable assignment simulation within sub-commands
-  if (trimmedSubCmd.includes("=") && trimmedSubCmd.startsWith("$")) {
-    const cleanCmd = trimmedSubCmd.replace(/;+/g, "");
-    const match = cleanCmd.match(/^\$(\w+)\s*=\s*(.+)$/);
-    if (match) {
-      const [, varName, varValue] = match;
-      let displayValue: string;
+  // 🌟 Handle IF THEN ELSE
+  const match = trimmedSubCmd.match(ifRegex);
+  if (match) {
+    const conditionStr = match[1].trim();
+    const afterThen = trimmedSubCmd.slice(match[0].length).trim();
+    
+    const thenBlockResult = extractBlock(afterThen);
+    if (!thenBlockResult) {
+      return ["Error: bloque THEN no válido o no cerrado"];
+    }
 
-      if (varValue.trim().startsWith("$")) {
-        const rightVarName = varValue.trim().substring(1);
-        const rightVarValue = context.variables[rightVarName];
-        if (rightVarName in context.variables) {
-          displayValue = Array.isArray(rightVarValue)
-            ? `[${rightVarValue.map((v) => (typeof v === "string" ? `"${v}"` : v)).join(", ")}]`
-            : typeof rightVarValue === "string"
-              ? `"${rightVarValue}"`
-              : String(rightVarValue);
-          return [`Would set variable '$${varName}' to: ${displayValue} (from '$${rightVarName}')`];
-        } else {
-          return [`Would set variable '$${varName}' to: (Error: Variable '$${rightVarName}' not found)`];
-        }
-      }
+    let restAfterThen = thenBlockResult.rest.trim();
 
-      try {
-        let parsedValue: any;
-        const arithmeticRegex = /^[\d\s+\-*/().]+$/;
-        const hasArithmetic = /[+\-*/]/.test(varValue) && arithmeticRegex.test(varValue);
-
-        if (hasArithmetic) {
-          const result = evaluateArithmetic(varValue.trim());
-          if (result.error) {
-            return [`Would set variable '$${varName}' to: (Error: ${result.error})`];
-          }
-          parsedValue = result.value;
-        } else if ((varValue.startsWith('"') && varValue.endsWith('"')) || (varValue.startsWith("'") && varValue.endsWith("'"))) {
-          parsedValue = varValue.slice(1, -1);
-        } else if (varValue.startsWith("[") && varValue.endsWith("]")) {
-          const arrayContent = varValue.slice(1, -1).trim();
-          parsedValue = arrayContent === "" ? [] : arrayContent.split(",").map((item) => {
-            const trimmed = item.trim();
-            if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) return trimmed.slice(1, -1);
-            else if (/^-?\d+\.?\d*$/.test(trimmed)) return Number.parseFloat(trimmed);
-            else if (trimmed === "true" || trimmed === "false") return trimmed === "true";
-            else return trimmed;
-          });
-        } else if (/^-?\d+\.?\d*$/.test(varValue)) {
-          parsedValue = Number.parseFloat(varValue);
-        } else if (varValue === "true" || varValue === "false") {
-          parsedValue = varValue === "true";
-        } else {
-          parsedValue = varValue;
-        }
-
-        displayValue = Array.isArray(parsedValue)
-          ? `[${parsedValue.map((v) => (typeof v === "string" ? `"${v}"` : v)).join(", ")}]`
-          : typeof parsedValue === "string"
-            ? `"${parsedValue}"`
-            : String(parsedValue);
-        return [`Would set variable '$${varName}' to: ${displayValue}`];
-      } catch (error) {
-        return [`Would set variable '$${varName}' to: (Error parsing value: ${varValue})`];
+    let elseBlockResult = null;
+    if (restAfterThen.toLowerCase().startsWith("else")) {
+      const afterElse = restAfterThen.slice(4).trim();
+      elseBlockResult = extractBlock(afterElse);
+      if (!elseBlockResult) {
+        return ["Error: bloque ELSE no válido o no cerrado"];
       }
     }
+
+    let conditionResult: boolean;
+    try {
+      conditionResult = evaluateCondition(conditionStr, context.variables);
+    } catch (e: any) {
+      return [`Error evaluando condición: ${e.message}`];
+    }
+
+    const selectedBlock = conditionResult
+      ? thenBlockResult.block.trim()
+      : elseBlockResult
+      ? elseBlockResult.block.trim()
+      : "";
+
+    if (!selectedBlock) {
+      return [
+        `Condición ${conditionResult} pero no se proveyó la rama correspondiente.`,
+      ];
+    }
+
+    // Ejecuta recursivamente el contenido seleccionado
+    return executeSimulatedSubCommand(selectedBlock, context);
   }
 
-  const [command, ...args] = trimmedSubCmd.split(" ");
+  // 🌟 Handle variable assignment simulation
+  if (trimmedSubCmd.includes("=") && trimmedSubCmd.startsWith("$")) {
+    // ... tu código existente para asignación de variables ...
+    // (sin cambios aquí)
+  }
+
+  // 🌟 Base command execution — strip brackets if present
+  const commandLine = trimmedSubCmd.replace(/^\[|\]$/g, "").trim();
+
+  const [command, ...args] = commandLine.split(" ");
   const arg = args.join(" ");
   let subOutput: string[] = [];
 
   switch (command.toLowerCase()) {
     case "echo":
-      subOutput = [processEchoArg(arg, context.variables, context.evaluateArithmetic)];
+      subOutput = [
+        processEchoArg(arg, context.variables, context.evaluateArithmetic),
+      ];
       break;
     case "cd":
       if (!arg) {
-        subOutput = ["Usage: cd <section>", "Available sections: " + Object.keys(context.sections).join(", ")];
+        subOutput = [
+          "Usage: cd <section>",
+          "Available sections: " + Object.keys(context.sections).join(", "),
+        ];
       } else if (arg === "..") {
         subOutput = [`Would navigate to: ${context.sections.home.path}`];
       } else if (arg in context.sections) {
-        subOutput = [`Would navigate to: ${context.sections[arg as keyof typeof context.sections].path}`];
+        subOutput = [
+          `Would navigate to: ${
+            context.sections[arg as keyof typeof context.sections].path
+          }`,
+        ];
       } else {
         subOutput = [`cd: ${arg}: No such section (in simulation)`];
       }
@@ -191,7 +211,11 @@ export const executeSimulatedSubCommand = (
       if (varName.startsWith("$")) {
         varName = varName.substring(1);
       }
-      if (varName && /^[a-zA-Z]/.test(varName) && varName in context.variables) {
+      if (
+        varName &&
+        /^[a-zA-Z]/.test(varName) &&
+        varName in context.variables
+      ) {
         subOutput = [`Would remove variable '$${varName}'.`];
       } else {
         subOutput = [`Variable '$${varName}' not found (in simulation).`];
@@ -207,7 +231,9 @@ export const executeSimulatedSubCommand = (
           ...Object.entries(context.variables).map(([name, value]) => {
             let displayValue: string;
             if (Array.isArray(value)) {
-              displayValue = `[${value.map((v) => (typeof v === "string" ? `"${v}"` : v)).join(", ")}]`;
+              displayValue = `[${value
+                .map((v) => (typeof v === "string" ? `"${v}"` : v))
+                .join(", ")}]`;
             } else if (typeof value === "string") {
               displayValue = `"${value}"`;
             } else {
@@ -219,11 +245,13 @@ export const executeSimulatedSubCommand = (
       }
       break;
     default:
-      subOutput = [`Simulated command '${command}' is not directly supported in this context.`];
+      subOutput = [
+        `Simulated command '${commandLine}' is not directly supported in this context.`,
+      ];
   }
+
   return subOutput;
 };
-
 
 // Main interpreter function
 export const interpretAstNode = (
@@ -239,7 +267,17 @@ export const interpretAstNode = (
   }
 ): string[] => {
   const output: string[] = [];
-  const { currentSection, router, variables, setVariables, setHistory, commandHistory, setIsOpen } = context;
+  const {
+    currentSection,
+    router,
+    variables,
+    setVariables,
+    setHistory,
+    commandHistory,
+    setIsOpen,
+  } = context;
+  console.log(node)
+  
 
   // Context for SIMULATED commands (read-only for variables, no direct state changes)
   const simulatedContext: SubCommandContext = {
@@ -251,116 +289,140 @@ export const interpretAstNode = (
 
   try {
     switch (node.type) {
-      case 'IfStatement':
-        output.push(`--- Simulating: if [${node.condition}] ---`);
-        let conditionResult = evaluateCondition(node.condition, variables);
-        output.push(`Condition '${node.condition}' evaluated to: ${conditionResult}`);
-        output.push("");
+      case "Literal": 
+        return node.value
+      case "IfStatement":
+  let conditionResult = evaluateCondition(node.condition, variables);
 
-        if (conditionResult) {
-          output.push(`-> Condition is TRUE, executing 'then' block: '${node.thenBranch}'`);
-          const subOutput = executeSimulatedSubCommand(node.thenBranch, simulatedContext);
-          subOutput.forEach(line => output.push(`    ${line}`)); // Indent sub-command output
-        } else if (node.elseBranch) {
-          output.push(`-> Condition is FALSE, executing 'else' block: '${node.elseBranch}'`);
-          const subOutput = executeSimulatedSubCommand(node.elseBranch, simulatedContext);
-          subOutput.forEach(line => output.push(`    ${line}`)); // Indent sub-command output
-        } else {
-          output.push(`-> Condition is FALSE, no 'else' block found.`);
-        }
-        output.push("--- End Simulation ---");
-        break;
+  if (conditionResult) {
+    return interpretAstNode(node.thenBranch, context);
+  } else if (node.elseBranch) {
+    return interpretAstNode(node.elseBranch, context);
+  } else {
+    output.push(`-> Condition is FALSE, no 'else' block found.`);
+  }
+  break;
 
-      case 'VariableAssignment':
+      case "VariableAssignment":
         const varName = node.name;
         const varValueStr = node.value;
 
         if (!/^[a-zA-Z]/.test(varName)) {
-          output.push(`Error: Variable name '$${varName}' must start with a letter`);
+          output.push(
+            `Error: Variable name '$${varName}' must start with a letter`
+          );
           break;
         }
 
         // Handle arithmetic assignment: $var = $var + 2
-        const arithmeticAssignMatch = varValueStr.trim().match(/^\$(\w+)\s*([+\-*/])\s*(.+)$/);
+        const arithmeticAssignMatch = varValueStr
+          .trim()
+          .match(/^\$(\w+)\s*([+\-*/])\s*(.+)$/);
         if (arithmeticAssignMatch && arithmeticAssignMatch[1] === varName) {
-            const [, sameVarName, operator, operandStr] = arithmeticAssignMatch;
+          const [, sameVarName, operator, operandStr] = arithmeticAssignMatch;
 
-            if (!(sameVarName in variables)) {
-                output.push(`Error: Variable '$${sameVarName}' does not exist`);
-                break;
-            }
-            const currentValue = variables[sameVarName];
-            if (typeof currentValue !== 'number') {
-                output.push(`Error: Cannot perform arithmetic on ${typeof currentValue} variable '$${sameVarName}'`);
-                break;
-            }
-
-            let operandValue: number;
-            const cleanOperand = operandStr.trim();
-            if (/^-?\d+\.?\d*$/.test(cleanOperand)) {
-                operandValue = Number.parseFloat(cleanOperand);
-            } else {
-                const result = evaluateArithmetic(cleanOperand);
-                if (result.error) {
-                    output.push(`Error in operand: ${result.error}`);
-                    break;
-                }
-                operandValue = result.value!;
-            }
-            if (isNaN(operandValue)) {
-                output.push(`Error: Invalid operand '${operandStr}'`);
-                break;
-            }
-
-            let newValue: number;
-            switch (operator) {
-                case "+": newValue = currentValue + operandValue; break;
-                case "-": newValue = currentValue - operandValue; break;
-                case "*": newValue = currentValue * operandValue; break;
-                case "/":
-                    if (operandValue === 0) { output.push(`Error: Division by zero is not allowed`); return output; }
-                    newValue = currentValue / operandValue;
-                    break;
-                default: output.push(`Error: Unknown operator '${operator}'`); return output;
-            }
-            setVariables((prev) => ({ ...prev, [varName]: newValue }));
-            output.push(`Variable '$${varName}' updated: ${currentValue} ${operator} ${operandValue} = ${newValue}`);
+          if (!(sameVarName in variables)) {
+            output.push(`Error: Variable '$${sameVarName}' does not exist`);
             break;
+          }
+          const currentValue = variables[sameVarName];
+          if (typeof currentValue !== "number") {
+            output.push(
+              `Error: Cannot perform arithmetic on ${typeof currentValue} variable '$${sameVarName}'`
+            );
+            break;
+          }
+
+          let operandValue: number;
+          const cleanOperand = operandStr.trim();
+          if (/^-?\d+\.?\d*$/.test(cleanOperand)) {
+            operandValue = Number.parseFloat(cleanOperand);
+          } else {
+            const result = evaluateArithmetic(cleanOperand);
+            if (result.error) {
+              output.push(`Error in operand: ${result.error}`);
+              break;
+            }
+            operandValue = result.value!;
+          }
+          if (isNaN(operandValue)) {
+            output.push(`Error: Invalid operand '${operandStr}'`);
+            break;
+          }
+
+          let newValue: number;
+          switch (operator) {
+            case "+":
+              newValue = currentValue + operandValue;
+              break;
+            case "-":
+              newValue = currentValue - operandValue;
+              break;
+            case "*":
+              newValue = currentValue * operandValue;
+              break;
+            case "/":
+              if (operandValue === 0) {
+                output.push(`Error: Division by zero is not allowed`);
+                return output;
+              }
+              newValue = currentValue / operandValue;
+              break;
+            default:
+              output.push(`Error: Unknown operator '${operator}'`);
+              return output;
+          }
+          setVariables((prev) => ({ ...prev, [varName]: newValue }));
+          output.push(
+            `Variable '$${varName}' updated: ${currentValue} ${operator} ${operandValue} = ${newValue}`
+          );
+          break;
         }
 
         if (varValueStr.trim().startsWith("$")) {
-            const rightVarName = varValueStr.trim().substring(1);
-            if (!(rightVarName in variables)) {
-                output.push(`Error: Variable '$${rightVarName}' does not exist`);
-                break;
-            }
-            const rightVarValue = variables[rightVarName];
-            if (varName in variables) {
-                const leftVarValue = variables[varName];
-                const leftType = Array.isArray(leftVarValue) ? "array" : typeof leftVarValue;
-                const rightType = Array.isArray(rightVarValue) ? "array" : typeof rightVarValue;
-                if (leftType !== rightType) {
-                    output.push(`Error: Type mismatch! Variable '$${varName}' is ${leftType}, cannot assign ${rightType} value from '$${rightVarName}'`);
-                    break;
-                }
-            }
-            setVariables((prev) => ({ ...prev, [varName]: rightVarValue }));
-            let displayValue: string;
-            if (Array.isArray(rightVarValue)) {
-              displayValue = `[${rightVarValue.map((v) => (typeof v === "string" ? `"${v}"` : v)).join(", ")}]`;
-            } else if (typeof rightVarValue === "string") {
-              displayValue = `"${rightVarValue}"`;
-            } else {
-              displayValue = String(rightVarValue);
-            }
-            output.push(`Variable '$${varName}' set to: ${displayValue} (from '$${rightVarName}')`);
+          const rightVarName = varValueStr.trim().substring(1);
+          if (!(rightVarName in variables)) {
+            output.push(`Error: Variable '$${rightVarName}' does not exist`);
             break;
+          }
+          const rightVarValue = variables[rightVarName];
+          if (varName in variables) {
+            const leftVarValue = variables[varName];
+            const leftType = Array.isArray(leftVarValue)
+              ? "array"
+              : typeof leftVarValue;
+            const rightType = Array.isArray(rightVarValue)
+              ? "array"
+              : typeof rightVarValue;
+            if (leftType !== rightType) {
+              output.push(
+                `Error: Type mismatch! Variable '$${varName}' is ${leftType}, cannot assign ${rightType} value from '$${rightVarName}'`
+              );
+              break;
+            }
+          }
+          setVariables((prev) => ({ ...prev, [varName]: rightVarValue }));
+          let displayValue: string;
+          if (Array.isArray(rightVarValue)) {
+            displayValue = `[${rightVarValue
+              .map((v) => (typeof v === "string" ? `"${v}"` : v))
+              .join(", ")}]`;
+          } else if (typeof rightVarValue === "string") {
+            displayValue = `"${rightVarValue}"`;
+          } else {
+            displayValue = String(rightVarValue);
+          }
+          output.push(
+            `Variable '$${varName}' set to: ${displayValue} (from '$${rightVarName}')`
+          );
+          break;
         }
 
         let parsedValue: any;
         try {
           const arithmeticRegex = /^[\d\s+\-*/().]+$/;
-          const hasArithmetic = /[+\-*/]/.test(varValueStr) && arithmeticRegex.test(varValueStr);
+          const hasArithmetic =
+            /[+\-*/]/.test(varValueStr) && arithmeticRegex.test(varValueStr);
 
           if (hasArithmetic) {
             const result = evaluateArithmetic(varValueStr.trim());
@@ -369,7 +431,10 @@ export const interpretAstNode = (
               break;
             }
             parsedValue = result.value;
-          } else if ((varValueStr.startsWith('"') && varValueStr.endsWith('"')) || (varValueStr.startsWith("'") && varValueStr.endsWith("'"))) {
+          } else if (
+            (varValueStr.startsWith('"') && varValueStr.endsWith('"')) ||
+            (varValueStr.startsWith("'") && varValueStr.endsWith("'"))
+          ) {
             parsedValue = varValueStr.slice(1, -1);
           } else if (varValueStr.startsWith("[") && varValueStr.endsWith("]")) {
             const arrayContent = varValueStr.slice(1, -1).trim();
@@ -378,9 +443,15 @@ export const interpretAstNode = (
             } else {
               const items = arrayContent.split(",").map((item) => {
                 const trimmed = item.trim();
-                if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) return trimmed.slice(1, -1);
-                else if (/^-?\d+\.?\d*$/.test(trimmed)) return Number.parseFloat(trimmed);
-                else if (trimmed === "true" || trimmed === "false") return trimmed === "true";
+                if (
+                  (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+                  (trimmed.startsWith("'") && trimmed.endsWith("'"))
+                )
+                  return trimmed.slice(1, -1);
+                else if (/^-?\d+\.?\d*$/.test(trimmed))
+                  return Number.parseFloat(trimmed);
+                else if (trimmed === "true" || trimmed === "false")
+                  return trimmed === "true";
                 else return trimmed;
               });
               parsedValue = items;
@@ -395,18 +466,26 @@ export const interpretAstNode = (
 
           if (varName in variables) {
             const existingValue = variables[varName];
-            const existingType = Array.isArray(existingValue) ? "array" : typeof existingValue;
-            const newType = Array.isArray(parsedValue) ? "array" : typeof parsedValue;
+            const existingType = Array.isArray(existingValue)
+              ? "array"
+              : typeof existingValue;
+            const newType = Array.isArray(parsedValue)
+              ? "array"
+              : typeof parsedValue;
 
             if (existingType !== newType) {
-              output.push(`Error: Type mismatch! Variable '$${varName}' is ${existingType}, cannot assign ${newType} value`);
+              output.push(
+                `Error: Type mismatch! Variable '$${varName}' is ${existingType}, cannot assign ${newType} value`
+              );
               break;
             }
           }
           setVariables((prev) => ({ ...prev, [varName]: parsedValue }));
           let displayValue: string;
           if (Array.isArray(parsedValue)) {
-            displayValue = `[${parsedValue.map((v) => (typeof v === "string" ? `"${v}"` : v)).join(", ")}]`;
+            displayValue = `[${parsedValue
+              .map((v) => (typeof v === "string" ? `"${v}"` : v))
+              .join(", ")}]`;
           } else if (typeof parsedValue === "string") {
             displayValue = `"${parsedValue}"`;
           } else {
@@ -416,12 +495,12 @@ export const interpretAstNode = (
         } catch (error) {
           output.push(
             `Error parsing value: ${varValueStr}`,
-            "Make sure to use proper syntax for arrays [1,2,3] or strings 'text'",
+            "Make sure to use proper syntax for arrays [1,2,3] or strings 'text'"
           );
         }
         break;
 
-      case 'DoLoop':
+      case "DoLoop":
         const collectionName = node.collection;
         const paramName = node.param;
         const commandTemplate = node.command;
@@ -433,48 +512,75 @@ export const interpretAstNode = (
 
         const collection = variables[collectionName];
         if (!Array.isArray(collection)) {
-          output.push(`Error: Variable '$${collectionName}' is not a collection (array).`);
+          output.push(
+            `Error: Variable '$${collectionName}' is not a collection (array).`
+          );
           break;
         }
 
-        output.push(`--- Iterating on '$${collectionName}' (${collection.length} items) ---`);
+        output.push(
+          `--- Iterating on '$${collectionName}' (${collection.length} items) ---`
+        );
         if (collection.length === 0) {
           output.push("Collection is empty, no commands executed.");
         }
 
         for (let i = 0; i < collection.length; i++) {
           const element = collection[i];
-          const processedCommand = commandTemplate.replace(new RegExp(`\\b${paramName}\\b`, "g"), () => {
-            if (typeof element === "string") {
-              return `'${element}'`;
-            } else if (typeof element === "number" || typeof element === "boolean") {
-              return String(element);
-            } else if (Array.isArray(element)) {
-                return `[${element.map(v => typeof v === 'string' ? `'${v}'` : v).join(', ')}]`;
-            } else {
-              return JSON.stringify(element);
+          const processedCommand = commandTemplate.replace(
+            new RegExp(`\\b${paramName}\\b`, "g"),
+            () => {
+              if (typeof element === "string") {
+                return `'${element}'`;
+              } else if (
+                typeof element === "number" ||
+                typeof element === "boolean"
+              ) {
+                return String(element);
+              } else if (Array.isArray(element)) {
+                return `[${element
+                  .map((v) => (typeof v === "string" ? `'${v}'` : v))
+                  .join(", ")}]`;
+              } else {
+                return JSON.stringify(element);
+              }
             }
-          });
+          );
 
-          output.push(`  [${i}] - Element: ${
-            typeof element === 'string' ? `'${element}'` :
-            Array.isArray(element) ? `[${element.map(v => typeof v === 'string' ? `'${v}'` : v).join(', ')}]` :
-            String(element)
-          }`);
+          output.push(
+            `  [${i}] - Element: ${
+              typeof element === "string"
+                ? `'${element}'`
+                : Array.isArray(element)
+                ? `[${element
+                    .map((v) => (typeof v === "string" ? `'${v}'` : v))
+                    .join(", ")}]`
+                : String(element)
+            }`
+          );
           output.push(`    Simulating: ${processedCommand}`);
 
-          const subOutput = executeSimulatedSubCommand(processedCommand, simulatedContext);
-          subOutput.forEach(line => output.push(`      ${line}`));
+          const subOutput = executeSimulatedSubCommand(
+            processedCommand,
+            simulatedContext
+          );
+          subOutput.forEach((line) => output.push(`      ${line}`));
           output.push("");
         }
         output.push("--- End Iteration ---");
         break;
 
-      case 'Command':
+      case "Command":
         const commandDef = COMMAND_DEFINITIONS[node.name];
         if (commandDef) {
           const commandOutput = commandDef.execute(node.args, {
-            currentSection, router, variables, setVariables, setHistory, commandHistory, setIsOpen
+            currentSection,
+            router,
+            variables,
+            setVariables,
+            setHistory,
+            commandHistory,
+            setIsOpen,
           });
           output.push(...commandOutput);
         } else {
@@ -484,14 +590,16 @@ export const interpretAstNode = (
             `Did you mean: ${Object.keys(COMMAND_DEFINITIONS)
               .filter((cmd) => cmd.includes(node.name.charAt(0)))
               .slice(0, 3)
-              .join(", ")}?`,
+              .join(", ")}?`
           );
         }
         break;
+      case "Literal":
+          return   node.value;
 
-      case 'Unknown':
+      case "Unknown":
         output.push(
-          `Command '${node.raw.split(' ')[0]}' not recognized.`,
+          `Command '${node.raw.split(" ")[0]}' not recognized.`,
           "Type 'help' for available commands."
         );
         break;
@@ -500,7 +608,11 @@ export const interpretAstNode = (
         break;
     }
   } catch (error) {
-    output.push(`\x1b[31mInternal interpreter error: ${error instanceof Error ? error.message : String(error)}\x1b[0m`);
+    output.push(
+      `\x1b[31mInternal interpreter error: ${
+        error instanceof Error ? error.message : String(error)
+      }\x1b[0m`
+    );
   }
 
   return output;

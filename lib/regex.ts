@@ -1,0 +1,1 @@
+export const ifRegex = /^if\s*\(([^)]+)\)\s*then\s*(.+?)\s*(?:else\s*(.+))?$/i;

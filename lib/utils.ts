@@ -1,5 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { AstNode } from "./types";
+import { evaluateCondition } from "./interpreter";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -84,3 +86,88 @@ export const evaluateArithmetic = (expression: string): { value?: number; error?
     return { error: error instanceof Error ? error.message : "Error evaluating arithmetic expression" };
   }
 };
+
+export const cleanBranch = (branch?: string | object): string | null => {
+  if (!branch) return null;
+  if (typeof branch === "string") {
+    const trimmed = branch.trim();
+    if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+      return trimmed.slice(1, -1).trim();
+    }
+    return trimmed;
+  }
+  throw new Error("Branch must be a string to simulate");
+};
+
+
+export function astNodeToString(node: any): string {
+  if (!node) return "";
+  switch (node.type) {
+    case "Command":
+      return `${node.name} ${node.args || ""}`.trim();
+    default:
+      return "";
+  }
+}
+
+export function extractBlock(input: string): { block: string; rest: string } | null {
+  if (!input.startsWith("{")) return null;
+  let depth = 0;
+  for (let i = 0; i < input.length; i++) {
+    if (input[i] === "{") depth++;
+    else if (input[i] === "}") depth--;
+    if (depth === 0) {
+      return { block: input.slice(1, i), rest: input.slice(i + 1) };
+    }
+  }
+  return null; 
+}
+
+export function parseBranch(branchStr: string): AstNode {
+  const trimmed = branchStr.trim();
+
+  // Sacar paréntesis exteriores si hay
+  let toParse = trimmed;
+  if (trimmed.startsWith('(') && trimmed.endsWith(')')) {
+    toParse = trimmed.slice(1, -1).trim();
+  }
+
+  // Intentar evaluar como expresión booleana
+  const val = tryParseBooleanExpression(toParse);
+  if (val !== null) {
+    return { type: 'Literal', value: val };
+  }
+
+  // Si no es expresión, parsear como comando
+  const parts = toParse.split(' ');
+  return { type: 'Command', name: parts[0].toLowerCase(), args: parts.slice(1).join(' ') };
+}
+
+
+export function tryParseBooleanExpression(expr: string): boolean | null {
+  const trimmed = expr.trim();
+
+  const looksLikeBool =
+    /^.+\s*[=!<>]=?\s*.+$/.test(trimmed) ||
+    trimmed === "true" ||
+    trimmed === "false" ||
+    trimmed.startsWith("$");
+
+  if (!looksLikeBool) return null;
+
+  try {
+    return evaluateCondition(trimmed, {}); 
+  } catch {
+    return null;
+  }
+}
+
+export function findClosingParen(str: string, openIndex: number): number {
+  let depth = 1;
+  for (let i = openIndex + 1; i < str.length; i++) {
+    if (str[i] === "(") depth++;
+    else if (str[i] === ")") depth--;
+    if (depth === 0) return i;
+  }
+  throw new Error("Unmatched parenthesis in: " + str);
+}
