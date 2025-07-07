@@ -1,0 +1,147 @@
+---
+title: 'Programación Orientada a Objetos'
+publishedAt: '2024-01-24'
+summary: 'Apuntes tomados por mí acerca de la programación orientada a objetos.'
+---
+
+
+## ¿Qué es la Programación Orientada a Objetos?
+La *P*rogramación *O*rientada a *O*bjetos (POO) es un paradigma basado en el concepto de envolver bloques de información y su comportamiento en cosas llamadas objetos que se construyen a partir de clases.
+
+### ¿Cómo se diagraman las clases? 
+Las clases se suelen diagramar utilizando Diagramas UML.
+
+### ¿Cómo está formada una clase?
+Las clases están formadas por su nombre, sus campos o atributos que pueden ser públicos, privados o protegidos y por último, sus métodos.
+
+<Callout emoji="⚠️">
+Este artículo estará completamente escrito en español inclusive desde el lado del código. Lo recomendado, es que cuando se lleve a la práctica, el código se escriba todo en Inglés ¡Inclusive las clases, atributos y métodos!
+</Callout>
+
+### ¿Cómo se ve una clase en un Diagrama UML?
+¿Te gustan los Gatos? A mí sí, tengo 2 gatitos. Nala y Zeus.
+Nala es hembra y Zeus macho. Ambos tienen un peso, pero pesan distinto.
+
+<Image
+  alt={`Clase 'GATO'`}
+  src={`/images/cat-class.svg`}
+  className='rounded-none'
+  width={300}
+  height={80}
+/>
+
+**Nombre de la clase**: Gato <br/>
+**Atributos de la clase**: nombre, género, edad, peso y raza <br/>
+**Métodos de la clase**: respirar(), comer(comida), dormir(tiempo), correr(destino) y miau() <br/>
+
+* Observación: El símbolo de "+" indica que la visibilidad del atributo / método es público mientras que si tiene un "-" indica que la visibilidad del atributo / método es privado.
+
+### Instancia de una clase 
+Toda instancia de una clase es un objeto. 
+Un ejemplo claro es que Nala y Zeus son instancias de la clase Gato porque Nala y Zeus tienen un nombre, género, edad, peso y raza ¡Y además hacen sus propias cosas (como dormir que es su favorita)!
+
+### ¿Qué roles cumplen los atributos y los métodos?
+Los atributos de las clases suelen cumplir el rol del "estado" de un objeto, mientras que los métodos cumplen el rol de "comportamiento" del objeto.
+
+## Jerarquías de clase
+Cuando hablamos de jerarquías de clase, estamos hablando de exactamente el significado de la palabra "jerarquía". Es decir, una clase más importante que otra o que una clase está "por encima" de la otra.
+
+Como mencioné antes, yo tengo dos gatos: Nala y Zeus. Pero capaz vos tenés un perro llamado Rocco. 
+Claramente un gato no es lo mismo que un perro, pero ambos tienen un nombre, un peso, una raza, un genéro, una edad y sus métodos particulares.
+
+¡Pero cuidado! El gato hace miau, y el perro hace guau. Este tipo de cosas, nos estan tratando de decir ¡che, ambos son animales, pero varían en ciertas cosas! Entonces, llamamos superclase a Animal y subclase a Gato y Perro.
+
+<Image
+  alt={`Superclase Animal, y Subclases Gato y Perro.`}
+  src={`/images/animal-cat-dog.svg`}
+  className='rounded-none'
+  width={600}
+  height={80}
+/>
+
+Las subclases Gato y Perro **extienden** de animal **heredando** sus atributos y métodos.
+Gato y Perro como subclases tendrían todo lo que tiene Animal, pero no al revés.
+
+<Callout emoji="⚠️">
+Si miau() estaría en Animal, estaríamos cambiando de universo ¡uno en donde los perros hacen miau!
+</Callout>
+
+## Interfaces
+Se limitan a contener métodos. La clase puede **implementar** estas interfaces. 
+
+Si la clase implementa la interfaz está obligada a definir el comportamiento de cada uno de los métodos provistos por esa interfaz.
+
+<Callout emoji="⚠️">
+No es lo mismo una Interfaz que las Interfaces para definir como se va a ver cierto objeto en lenguajes como TypeScript.
+</Callout>
+
+Pensemos una interfaz como algo que nos define una lista de métodos, y una clase al implementarla tiene que hacer todos esos métodos pero a su manera.
+
+¿Podría ser correr() un método dentro de una Interfaz que se implementa en Persona? Depende de la persona. 
+Quizá yo quiero definir a correr() como un método que se ejecuta estando en el contexto de una plaza, mientras que otra persona, capaz lo define corriendo en la cinta de un gimnasio.
+
+¿Podría ser vuelo() un método de una Interfaz que implementan Helicoptero y Avión? ¡Sí! Porque ambos realizan vuelos pero a su manera.
+<Image
+  alt={`Clases que implementan interfaces`}
+  src={`/images/interfaces.svg`}
+  className='rounded-none'
+  width={600}
+  height={80}
+/>
+
+## Pilares del Paradigma Orientado a Objetos
+Se basa en cuatro conceptos claves.
+### Abstracción
+Consiste en aislar un elemento de su contexto o del resto de los elementos que lo acompañan. El término se refiere al énfasis en el "¿qué hace?" más que en el "¿cómo lo hace?". En la evolución de los lenguajes de programación, el común denominador ha sido el nivel de abstracción.
+
+¿Por qué hablamos de abstracción en el paradigma orientado a objetos? Porque tenemos que traducir un objeto del mundo real de una forma LIMITADA a un contexto específico que represente todos los datos que se necesiten resolver.
+
+¡Creemos un simulador de vuelo! La clase Avión debe contener el modelo, la velocidad, la altura y un método volar.
+
+¡Creemos un sistema de tickets para Avión! La clase Avión debe contener el nombre, el horario de salida, los asientos disponibles y cómo reservar un vuelo de ese avión
+
+La clase es Avion, pero la abstracción que le hacemos con respecto al modelo de la vida real depende del contexto.
+
+### Polimorfismo
+Cuando necesitamos tratar un objeto no como **el tipo específico** del que es, sino como su tipo base. El poimorfismo indica que una variable pasada o esperada puede adoptar múltiples formas.
+La superclase es abstracta, y las subclases que hereden de esta superclase podrán implementar los métodos de la superclase y sobreescribir el compartamiento según deseen.
+
+**¡Mi gato duerme acurrucado como una bolita, pero tu perro duerme patas arriba!**
+
+<Image
+  alt={`Polimorfismo`}
+  src={`/images/polimorfismo.svg`}
+  className='rounded-none'
+  width={600}
+  height={80}
+/>
+<br/>
+<Callout emoji="💡">
+Las clases abstractas, y los métodos abstractos en los Diagramas UML se escriben en itálica.
+</Callout>
+
+### Encapsulamiento 
+Es la capacidad que tiene un objeto de esconder partes de su estado y comportamiento de otros objetos, exponiendo únicamente una interfaz limitada al resto del programa.
+
+Cuando hablamos de encapsular es hacerlo **privado** (private) y que solamente pueda ser ejecutado desde la clase. Usualmente, la clase **expone** ciertos métodos para que puedan modificar esos atributos privados.
+
+También podemos hacer que los atributos no sean privados sino **protegidos** (protected) el cual solo pueden ser modificados por las subclases, u otras clases si se les proporciona un método para modificarlos.
+
+¡Tu papá y tu mamá salen a caminar! Como vos sos familiar de ellos, tenés la llave, es decir, podés agarrarla, romperla, partirla, hacer lo que quieras.
+Yo no conozco a tus familiares, ni tampoco bien a vos pero si tu papá y mamá me lo permiten, y me dicen una forma de tomar esa llave ¡yo también la puedo romper! 
+
+Véase que la relación de padre-madre sería la superclase, vos serías una herencia que puede acceder a la llave porque la llave fue declarada protegida para los familiares directos de padre-madre, pero yo no puedo porque no heredo de tus familiares, por lo tanto, para mí la llave es privada de ustedes a menos que vos me la otorgues a hacerle algo.
+
+### Herencia
+Es la capacidad de crear nuevas clases sobre otras existentes. La relación es de padre-hijo o superclase-subclase.
+Las ventajas de la herencia es que podemos reutilizar código porque no tenemos que escribir una y otra vez los mismos métodos que tiene la superclase ni tampoco los atributos.
+Las desventajas es que estamos obligados a que las subclases hereden todo de la superclase y tampoco puedo esconder esos métodos si no los quiero.
+
+## Conclusión
+¿Que te pareció el post? ¡no dudes en contactarme por mis redes sociales! 
+
+¡Próximamente voy a poner una sección de comentarios!
+
+## Lecturas Recomendadas
+* Próximo post: Tipos de relaciones entre objetos.
+* Lectura recomendada: [Patrones de Diseño](/blog/pattern-designs)

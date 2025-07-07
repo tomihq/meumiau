@@ -1,0 +1,609 @@
+---
+title: 'Patrones de Diseño - Factory Method'
+publishedAt: '2024-02-13'
+summary: 'Apunte tomado por mí que detalla las ventajas que nos ofrece el Patrón de Diseño creacional Factory Method'
+---
+
+## Patron Factory Method (Creacional)
+
+El Patrón Factory Method se centra en definir un método de creación abstracto que las subclases deben implementar, permitiéndoles crear objetos específicos. 
+
+Proporciona una interfaz para crear objetos en una superclase, lo que permite a las subclases alterar el tipo de objetos que se crearán. 
+
+Este patrón facilita la encapsulación de la lógica específica sin necesidad de refactorizar el código de una clase que ya funciona correctamente.
+
+<Callout emoji="⚠️">
+Esta publicación es larga porque contiene refactorizaciones y ejercicios resueltos para ver las ventajas del patrón.
+</Callout>
+
+## ¿Cuándo aplicarlo? 
+Cuando sepas que a futuro vas a agregar otro tipo de objeto que tengan métodos en común y estén ligados conceptualmente.
+
+En otras palabras, aplícalo cuando no conozcas de antemano las dependencias y los tipos exactos de los objetos con los que debe funcionar el código.
+
+## Beneficios
+1. Cumplís el principio de responsabilidad única. Cada uno hace una sola cosa, y es más fácil de mantener.
+2. Nos permite crear objetos nuevos que "hereden" de alguna forma el comportamiento de otros sin estar estrictamente ligados entre ellos.
+3. No ligamos las clases entre sí, sino que derivamos la creación a una fábrica específica y genérica sin depender de la clase.
+
+<Callout emoji="⚠️">
+Muchas veces este patrón nos hace el código mucho más grande por la cantidad de clases. Pero a la larga, el código es más fácil de escalar y mantener.
+</Callout>
+
+## Ejemplos
+A continuación voy a dar ciertos ejemplos que para mí parecer, son bastante claros. Luego, explicaremos como implementarlo en un lenguaje de programación. Pero la idea es que puedan entender el concepto. 
+
+### Ejemplo 1
+Tenés una página de comercio electrónico, hasta este momento estás aceptando solo tarjeta de débito. El día de mañana necesitás implementar pagos con tarjeta de crédito y efectivo.
+
+**¿Cuál es el objetivo?** Permitir pagar a un cliente. Al cliente no le importa como está implementada desde el código la funcionalidad de poder pagar. 
+
+**¿Cuál sería el objeto abstracto clave?** Payment.
+
+<Callout emoji="⚠️">
+Mejor sería llamarle PaymentMethod porque un Payment consiste en mucho más que solamente los datos del pago.
+</Callout>
+
+**¿Es la misma lógica el manejo de la tarjeta de crédito que de débito?** No. Porque con débito muchas veces sale más barato que con crédito, porque con crédito hay que considerar los intereses mensuales, si las cuotas son sin interés, el banco que proporciona la tarjeta, etc, etc.
+
+**¿Es la misma lógica el manejo de la tarjeta de débito que con efectivo?** No. Porque con débito seguramente tengamos que hacer la solicitud hacia un portal de pagos para verificar que el pago realmente pueda efectuarse (temas de saldo, tarjeta verídica, etc) mientras que en efectivo no sería necesario.
+
+### Ejemplo 2
+Tenés un restaurante y tu especialidad son las pizzas de jamón y palmitos
+A medida que tu restaurante crece, los clientes te reclaman que comiences a ofrecer en el menú las siguientes pizzas:
+1. Muzzarella
+2. Provolone
+3. Napolitana
+4. Jamón y Morrones
+
+Considerando que la masa de la pizza es siempre la misma ¿como hacemos que cada pizza sea independiente sin tener que modificar la original? 
+
+**¿Cuál es el objetivo?** Realizar una pizza.
+
+**¿Cuál sería el objeto abstracto clave?** Pizza.
+
+**¿Es la misma lógica la creación de una pizza de muzzarella o jamón y morrones?** No. Porque la pizza de jamón y morrones tiene cosas que la de muzzarella no y viceversa.
+
+### Ejemplo 3 
+Tenés una fábrica de dulces.
+Comenzás creando chocolates, pero no descartás fabricar gomitas, turrones, chicles y más.
+
+A medida que tu fábrica crece, la gente te pide fabricar las anteriormente mencionadas.
+1. Chocolates 
+2. Gomitas 
+3. Turrones 
+4. Chicles
+
+**¿Cuál es el objetivo?** Crear golosinas.
+
+**¿Cuál sería el objeto abstracto clave?** Golosina.
+
+**¿Es la misma lógica la creación de un chocolate que una gomita?** No.
+
+Podés ver la resolución y ventaja del patrón factory method haciendo [click acá](#qu-nos-ahorra-el-patrn-factory-ac-ejemplo-golosinas)
+
+### Ejemplo 4 (más técnico)
+Según el ambiente en donde estés trabajando, tenés que usar una base de datos de MongoDB o Redis.
+Digamos que necesitás usar una base de datos Redis en desarrollo para poder usar la información cacheada de producción pero en producción necesitás si o si la base de datos de Mongo para que cambie la información de la base y luego se haga un caché en Redis. 
+
+**¿Cuál es el objetivo?** Realizar una conexión a una DB. A vos no te interesa como está armado sino que esperás que funcionen igual, es decir, que te devuelvan una conexión para poder obtener la información que necesitás.
+
+**¿Cuál sería el objeto abstracto clave?** Database.
+
+**¿Es la misma lógica como consumimos la data de una base de Mongo que de Redis?** No. Claramente no. Porque Redis nos permite devolver la información en caché mientras que MongoDB podemos usarlo para muchas cosas más como hacer consultas o mutar información en tiempo real.
+
+Podés ver la resolución y ventaja del patrón factory method haciendo [click acá](#qu-nos-ahorra-el-patrn-factory-ejemplo-databases)
+
+## Funcionamiento del Patrón Factory Method
+Espero que con los ejemplos anteriores haya quedado claro. La idea es CREAR COSAS a través de una fábrica.
+De esta manera, podemos ir agregando CUALQUIER OTRO OBJETO que necesitemos, sin conocer la implementación de la clase raíz y sin hacer un copy-paste.
+
+En el modelo mental de mi cabeza, es una especie de IF/ELSE con superpoderes. 
+
+<Callout emoji="⚠️">
+Spoiler: se suele usar una estructura de control switch/case.
+</Callout>
+
+Es decir, porque según en qué caso estamos, tenemos que usar una clase u otra que hacen lo mismo, pero de manera distinta. 
+
+El truco es entender bien cual es el objetivo de lo que estás haciendo, y de qué forma. Porque según lo que estés haciendo, la forma varía, pero terminás llegando al mismo objetivo. 
+
+## Paso a paso de implementación
+**1. Definir una clase abstracta**: Esta clase contendrá el método que todas las clases concretas deberán implementar. Este método será el responsable de crear y retornar instancias de un tipo específico.
+
+En uno de los ejemplos anteriores era: Payment. Para ser más claros, lo llamaremos PaymentFactory.
+
+<Callout emoji="⚠️">
+Mejor sería llamarle PaymentMethod porque un Payment consiste en mucho más que solamente los datos del pago.
+</Callout>
+
+PaymentFactory debería tener un método abstracto que sea createPaymentMethod() y que el tipo de la clase que lo implemente sea un Payment.
+
+```ts
+abstract class PaymentFactory {
+    public abstract createPaymentMethod(): Payment
+}
+```
+
+**2. Crear clases concretas que extiendan la clase abstracta**: Cada clase concreta debe extender la clase abstracta y proporcionar una implementación del método de creación. Este método debe retornar una instancia del tipo correspondiente.
+En el ejemplo anterior era: createPaymentMethod(), y este método debería de retornar algo del tipo Payment.
+
+¿Como es que podemos pagar?
+Débito, crédito y efectivo.
+
+Entonces hay que crear, por cada método, una clase factory que permita hacer la instancia de cada clase.
+```ts
+class DebitPaymentFactory extends PaymentFactory {
+    public createPaymentMethod(){
+        return new DebitPayment()
+    }
+}
+
+class CreditPaymentFactory extends PaymentFactory {
+    public createPaymentMethod(){
+        return new CreditPayment()
+    }
+}
+
+class CashPaymentFactory extends PaymentFactory {
+    public createPaymentMethod(){
+        return new CashPayment()
+    }
+}
+```
+
+**3. Defino una interfaz común para los objetos a crear**: Esto asegura que todas las clases concretas implementen un comportamiento consistente, lo que facilita el uso de los objetos creados por la fábrica.
+En el ejemplo que venimos usando, todos son tipos de pago.
+```ts
+abstract class Payment {
+    method!: string;
+
+    public abstract pay():void;
+
+    public completePayment(){
+        console.log(`Payment with ${this.method} has been completed.`);
+    }
+}
+```
+
+**4. Implemento el comportamiento específico de cada clase concreta**: Cada clase concreta define cómo se crea una instancia de su tipo particular. Esto puede incluir la configuración de propiedades, la inicialización de variables, etc.
+En el ejemplo que venimos usando, todos son tipos de pago.
+```ts
+class DebitPayment extends Payment{
+    method: string;
+
+    constructor(){
+        super() //Llamo al constructor de Payment
+        this.method = "Debit"
+    }
+
+    pay(){
+            // Lo que necesites hacer para guardar que la persona pagó con tarjeta de débito.
+    }
+}
+
+class CreditPayment extends Payment {
+    method: string;
+
+    constructor(){
+        super() //Llamo al constructor de Payment
+        this.method = "Credit"
+    }
+
+    pay(){
+            // Lo que necesites hacer para guardar que la persona pagó con tarjeta de crédito.
+    }
+}
+
+class CashPayment extends Payment {
+    method: string;
+
+    constructor(){
+        super() //Llamo al constructor de Payment
+        this.method = "Cash"
+    }
+
+    pay(){
+        // Lo que necesites hacer para guardar que la persona pagó en efectivo.
+    }
+}
+```
+
+**5. Por último, instancio la fábrica según sea necesario**: Cuando se necesite crear un objeto, se instancia la fábrica correspondiente y se utiliza su método de creación para obtener una instancia del objeto deseado.
+Considere que paymentMethod es un número:
+1: Debit 
+2: Credit 
+3: Cash
+```ts
+switch (paymentMethod) {
+case 1:
+    main(new DebitPaymentFactory());
+    break;
+case 2:
+    main(new CreditPaymentFactory());
+    break;
+case 3:
+    main(new CashPaymentFactory());
+    break;
+default:
+    console.error('Unknown Payment Method');
+}
+
+function main(paymentFactory: PaymentFactory) {
+    const payment = paymentFactory.createPaymentMethod();
+    payment.pay();
+    payment.completePayment()
+}
+```
+
+## Código
+```ts
+abstract class PaymentFactory {
+    public abstract createPaymentMethod(): Payment
+}
+
+class DebitPaymentFactory extends PaymentFactory {
+    public createPaymentMethod(){
+        return new DebitPayment()
+    }
+}
+
+class CreditPaymentFactory extends PaymentFactory {
+    public createPaymentMethod(){
+        return new CreditPayment()
+    }
+}
+
+class CashPaymentFactory extends PaymentFactory {
+    public createPaymentMethod(){
+        return new CashPayment()
+    }
+}
+
+abstract class Payment {
+    method!: string;
+
+    public abstract pay():void;
+
+    public completePayment(){
+        console.log(`Payment with ${this.method} has been completed.`);
+    }
+}
+
+class DebitPayment extends Payment{
+    method: string;
+
+    constructor(){
+        super() //Llamo al constructor de Payment
+        this.method = "debit"
+        
+    }
+
+    pay(){
+        console.log("holaaaa")
+            // Lo que necesites hacer para guardar que la persona pagó con tarjeta de débito.
+    }
+}
+
+class CreditPayment extends Payment {
+    method: string;
+
+    constructor(){
+        super() //Llamo al constructor de Payment
+        this.method = "Credit"
+    }
+
+    pay(){
+            // Lo que necesites hacer para guardar que la persona pagó con tarjeta de crédito.
+    }
+}
+
+class CashPayment extends Payment {
+    method: string;
+
+    constructor(){
+        super() //Llamo al constructor de Payment
+        this.method = "Cash"
+    }
+
+    pay(){
+        // Lo que necesites hacer para guardar que la persona pagó en efectivo.
+    }
+}
+
+const paymentMethod = 1; //Nótese que estoy hardcodeando una forma de pago a modo de ejemplo.
+switch (paymentMethod) {
+    case 1:
+        main(new DebitPaymentFactory());
+        break;
+    case 2:
+        main(new CreditPaymentFactory());
+        break;
+    case 3:
+        main(new CashPaymentFactory());
+        break;
+    default:
+        console.error('Unknown Payment Method');
+}
+
+function main(paymentFactory: PaymentFactory) {
+    const payment = paymentFactory.createPaymentMethod();
+    payment.pay();
+    payment.completePayment()
+}
+```
+## Resoluciones de los ejemplos
+
+### ¿Qué nos ahorra el Patrón Factory acá? Ejemplo Golosinas
+NO HACER
+```ts
+class Chocolate{
+    public crear(){
+        console.log("Creando un chocolate...");
+    }
+
+    public empacar(){
+        console.log("Cortar el chocolate");
+    }
+}
+
+class ChocolateBlanco{
+    public crear(){
+        console.log("Creando un chocolate blanco...");
+    }
+
+    public empacar(){
+        console.log("Cortar el chocolate blanco");
+    }
+}
+
+class Turron{
+    public crear(){
+        console.log("Creando un turron...");
+    }
+}
+
+class Chicle{
+    public crear(){
+        console.log("Creando un chicle...");
+    }
+}
+
+class Gomita{
+    public crear(){
+        console.log("Creando una gomita...");
+    }
+}
+
+const chocolate = new Chocolate();
+chocolate.crear();
+chocolate.empacar();
+```
+
+1. ¿Qué pasó con el método de empacar en Turron, Chicle y Gomita? ¡Se nos olvidó! Pero esto es porque en ningún lado definí que todos estos productos debían de empacarse :(. 
+2. ¿El chocolate blanco no es también un chocolate? ¿Por qué hay dos clases diferentes cuando solo varían en poquitas cosas?
+3. Las clases son independientes, es decir, no tenemos ningún método genérico que nos permita instanciar cualquier tipo de golosina. 
+
+SÍ HACER:
+```ts
+abstract class GolosinaFactory {
+    public abstract  crearGolosina():Golosina;
+}
+
+class ChocolateNegroFactory extends GolosinaFactory{
+    crearGolosina(){
+        return new ChocolateNegro();
+    }
+}
+
+class ChocolateBlancoFactory extends GolosinaFactory{
+    crearGolosina(){
+        return new ChocolateBlanco();
+    }
+}
+
+class TurronFactory extends GolosinaFactory{
+    crearGolosina(){
+        return new Turron();
+    }
+}
+
+class ChicleFactory extends GolosinaFactory{
+    crearGolosina(){
+        return new Chicle();
+    }
+}
+
+class GomitaFactory extends GolosinaFactory{
+    crearGolosina(){
+        return new Gomita();
+    }
+}
+
+abstract class Golosina {
+    public abstract  crear():void;
+    public abstract  empacar():void;
+}
+
+class Chocolate {
+    public tipoChocolate: string
+
+    constructor(chocolate: {tipoChocolate: string}){
+        this.tipoChocolate = chocolate.tipoChocolate
+    }
+}
+
+
+class ChocolateNegro extends Chocolate implements Golosina{
+    constructor(){
+        super({tipoChocolate: 'negro'})
+    }
+    public crear(){
+        console.log("Creando un chocolate negro...");
+    }
+
+    public empacar(){
+        console.log("Empacar el chocolate negro...");
+    }
+}
+
+
+class ChocolateBlanco extends Chocolate implements Golosina{
+     constructor(){
+        super({tipoChocolate: 'blanco'})
+    }
+    
+    public crear(){
+        console.log("Creando un chocolate blanco...");
+    }
+
+    public empacar(){
+        console.log("Empacar el chocolate blanco...");
+    }
+}
+
+
+class Turron extends Golosina{
+    public crear(){
+        console.log("Creando un turron...");
+    }
+
+    public empacar(){
+        console.log("Empacar el turron");
+    }
+}
+
+class Chicle extends Golosina{
+    public crear(){
+        console.log("Creando un chicle...");
+    }
+
+      public empacar(){
+        console.log("Empacar el chicle...");
+    }
+}
+
+class Gomita extends Golosina{
+    public crear(){
+        console.log("Creando una gomita...");
+    }
+
+    public empacar(){
+        console.log("Empacando...");
+    }
+}
+
+const chocolateNegroFactory = new ChocolateNegroFactory()
+const chocolateNegro = chocolateNegroFactory.crearGolosina()
+chocolateNegro.crear()
+chocolateNegro.empacar()
+```
+1. Encapsulamos la creación de una golosina a través de la fábrica. Es decir, no manipulamos la instancia del objeto directamente. Sino que se nos garantiza que crearGolosina nos devuelve una Golosina, pero no nos dice específicamente cuál pero la fábrica sabe cual instanciar.
+2. Mayor flexibilidad y menor acoplamiento entre las clases pues las fábricas NO están ligadas directamente a tipos específicos de golosinas. Es decir, crearGolosina() es totalmente genérico. 
+3. Todas las golosinas están obligadas a tener los métodos de creación y empaquetamiento del productos gracias a la clase abstracta de Golosina.
+
+### ¿Qué nos ahorra el Patrón Factory? Ejemplo Databases
+NO HACER: 
+```ts
+class MongoDB {
+    public connect():void{
+        console.log("Connected to MongoDB");
+    }
+    public get():void{
+         console.log("Get MongoDB Info");
+        // more process here...
+    }
+}
+
+class Redis {
+    public connect():void{
+        console.log("Connected to Redis");
+    }
+
+    public get():void{
+        console.log("Get Redis Info");
+        // more process here...
+    }
+}
+
+const redisInstance = new Redis()
+const redisConnection = redis.connect()
+const data = redisConnection.get()
+```
+
+1. Estamos haciendo dos clases diferentes que tienen el mismo método con el mismo nombre, pero nada nos garantiza que el día de mañana borremos el de connect() en alguna y siga funcionando porque nadie nos obliga a que realmente la tenga.
+2. Estamos considerando a las dos clases como independientes, cuando en realidad, ambas cumplen el mismo objetivo, ser un proveedor de información luego de usar el método connect().
+3. Si quisieramos consultar información con Mongo y Redis, deberíamos modificar las dos clases para agregar un nuevo método de get.
+4. Las clases de Redis() y Mongo() son responsables de además de hacer la conexión, configurar sus métodos para consultar la información. 
+Es decir, tienen más de una responsabilidad. 
+Imaginate que solo funciona mal el método get(), estaríamos también poniendo en peligro la implementación de la conexión si ese objeto llegase a fallar por alguno de los otros métodos.
+
+SÍ HACER:
+```ts
+abstract class DBConnectionFactory{
+    public abstract createConnection(): Database
+}
+
+class MongoDBFactory extends DBConnectionFactory {
+    public createConnection(){
+        return new MongoDB()
+    }
+}
+
+class RedisFactory extends DBConnectionFactory {
+    public createConnection(){
+        return new Redis()
+    }
+}
+
+abstract class Database {
+    public abstract get(): void
+}
+
+class MongoDB extends Database {
+    public get():void{
+         console.log("Get MongoDB Info");
+        // more process here...
+    }
+}
+
+class Redis extends Database {
+    public get():void{
+        console.log("Get Redis Info");
+        // more process here...
+    }
+}
+
+const redisFactory = new RedisFactory()
+const redis = redisFactory.createConnection()
+const data = redis.get()
+
+```
+1. Abstracción de la conexión a la base de datos: La clase abstracta DBConnectionFactory define un método abstracto createConnection y nos ayuda en el proceso de creación de conexiones a la base de datos.
+2. Fábricas concretas para cada tipo de base de datos: MongoDBFactory y RedisFactory extienden de DBConnectionFactory y proporcionan implementaciones específicas del método createConnection. Esto permite una fácil extensión del código para agregar soporte para nuevas bases de datos en el futuro.
+3. Separación de responsabilidades: Las clases MongoDB y Redis ahora se centran únicamente en la lógica específica de su respectiva base de datos. No están preocupadas por la creación de conexiones, lo que sigue el principio de responsabilidad única y hace que las clases sean más cohesivas y fáciles de mantener.
+4. Uso de clases abstractas: Clase abstracta Database que define un método abstracto get, asegurando que todas las clases que representan bases de datos implementen este método. Esto garantiza consistencia en la interfaz de todas las bases de datos compatibles.
+5. Uso de las fábricas para crear conexiones y obtener datos: Al utilizar las fábricas para crear conexiones y luego llamar al método get en el objeto devuelto, estás desacoplando el proceso de creación de la lógica de uso de la conexión. Esto hace que el código sea más flexible y fácil de mantener.
+
+<Callout emoji="⚠️">
+Observación: En vez de clases abstractas para tener los métodos de get() y createConnection() podrían usarse interfaces en TypeScript.
+</Callout>
+
+### Conclusión de Factory Method
+Usamos fábricas.
+
+Evitamos un acoplamiento fuerte entre clases.
+
+Cada subclase puede hacer el proceso que la clase abstracta obliga, pero a su manera.
+
+
+Es un poco, quizá abrumador al inicio, pero una vez que lo aplicaste te das cuenta de las ventajas.
+
+## ¿Siguiente patrón de diseño que vamos a ver? Builder
+El patrón Builder nos permite manejar la creación de algo grande, es decir, paso a paso. Imaginate que ahora necesitamos crear órdenes de venta, que a su vez se puede haber usado cualquiera de los métodos de pago que teníamos.
+Esta creación de una orden de venta, la podemos hacer usando Builder + Factory Method. 
+
+¿Por qué el Factory Method? Porque una persona puede elegir de qué manera pagar, y si quisieramos a futuro podemos agregar formas de pago sin tener la necesidad de modificar las demás.
+
+¿Por qué Builder? Lo vemos la próxima
+

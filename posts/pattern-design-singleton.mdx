@@ -1,0 +1,144 @@
+---
+title: 'Patrones de Diseño - Singleton'
+publishedAt: '2024-01-09'
+summary: 'Apunte tomado por mí que detalla las ventajas que nos ofrece el Patrón de Diseño creacional Singleton'
+---
+
+## Patron Singleton (creacional)
+El Patron Singleton radica en que solamente existirá una instancia de un objeto de una clase a lo largo de una aplicación.
+
+¿Cómo puedo proteger que solamente exista una instancia?
+Bueno, la idea es almacenar esa instancia en una variable de la clase que sea tipo estática.
+
+La variable de tipo estática y privada suele tener el nombre de **instance**. 
+Al ser estática y privada quiere decir que la idea es que no debe de poder accederse a ella desde fuera.
+
+<Callout emoji="⚠️">
+El atributo de clase instance debe de ser privado y estático.
+</Callout>
+
+## Diferencia en implementación
+Según el lenguaje que se utilice, se implementa de una manera ligeramente diferente. La diferencia radica en sí el lenguaje acepta atributos privados en clases o no. Para eso, voy a dar un ejemplo en TypeScript (acepta atributos privados y estáticos) VS JavaScript (con la versión que no aceptaba atributos privados)
+
+### Ejemplo en TypeScript
+```ts
+class Api {
+    private static instance: Api
+    private constructor(){
+
+    }
+
+    public static getInstance():Api {
+        if(!this.instance){
+            this.instance = new Api();
+        }
+        return this.instance;
+    }
+
+}
+
+const api = Api.getInstance() //La crea por primera vez.
+const api2 = Api.getInstance() //api2 tiene exactamente la misma instancia que api.
+
+Api.instance = undefined; //¡Esto es imposible de hacer porque instance es privado.
+```
+
+<Callout emoji="😀">
+Si no me creen, impleméntenlo y hagan un **console.log(api===api2)**. Se espera **true**.
+</Callout>
+
+
+### Ejemplo en JavaScript
+En JavaScript es ligeramente diferente (hasta el día de la fecha) porque las clases no aceptan atributos privados. ¿Qué significa esto? Que tranquilamente con la implementación anterior podríamos instanciar el objeto tantas veces como queramos porque JS no nos impide llamar al constructor.
+
+**No lo hagas de esta forma:**
+```js
+class Api {
+     static instance
+     constructor(){
+
+    }
+
+    static getInstance() {
+        if(!this.instance){
+            this.instance = new Api();
+        }
+
+        return this.instance;
+    }
+
+}
+
+const api = new Api();
+const api2 = new Api(); //Es totalmente válido pero api es distinto a api2
+
+Api.instance = undefined; //¡Estamos dejando sin sentido al singleton!.
+console.log(Api.instance);
+```
+
+<Callout emoji="💡">
+En los lenguajes que no tienen atributos de clase privados, nada nos quita la posibilidad de acceder a sus elementos.
+</Callout>
+
+**Mejor hacelo de esta forma:**
+```js
+class Api {
+    static instance
+
+    constructor(){
+        if(Api.instance) return Api.instance;
+        Api.instance = this;
+    }
+
+    static getInstance() {
+        return Api.instance;
+    }
+
+}
+
+const api = Api.getInstance() //La crea por primera vez.
+const api2 = Api.getInstance() //api2 tiene exactamente la misma instancia que api.;
+
+```
+
+### Ejercicio con un poco más de complejidad en TypeScript
+```ts
+class Winner {
+    private static instance: Winner
+    name: String; 
+
+    constructor(name: string){
+        this.name = name;
+        if(Winner.instance) return Winner.instance;
+        Winner.instance = this;
+    }
+
+}
+
+const winner = new Winner("tomihq"); 
+const winner2 = new Winner("lucia"); 
+console.log(winner.name);
+console.log(winner2.name);
+console.log(winner === winner2);
+```
+
+<Callout emoji="💡">
+El símbolo de "===" en JavaScript/TypeScript sirve para hacer comparaciones por valor y tipo.
+</Callout>
+
+1. ¿Es winner estrictamente igual a winner2? 
+2. ¿Qué valor tienen winner.name y winner2.name?
+
+### Solución
+Como estamos utilizando el patrón singleton: 
+1. La primera vez el nombre asignado es "tomihq", luego como la instancia no existe se crea y se almacena en instance. 
+2. La segunda vez asigna el nombre de "lucia" a una instancia, pero como ya existe otra instance almacenada en instance, se devuelve la anterior sin darle la posibilidad de crear una nueva.
+
+Por lo tanto: winner === winner2 y el nombre de winner es tomihq.
+
+### Conclusión de Singleton 
+La operatividad del patrón Singleton se basa en la verificación de si la clase posee una variable denominada "instance" con algún valor asignado. En caso afirmativo, se retorna dicho valor almacenado en "instance". En caso contrario, se procede a la construcción de una instancia de la clase, la cual se guarda en la variable "instance". Posteriormente, si se realiza una solicitud de instancia, se devuelve la que fue previamente almacenada.
+
+¿Simple, no? bueno. Es siempre igual solo que ahora depende de cada uno saber cuando usarlo. 
+
+

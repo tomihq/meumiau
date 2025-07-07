@@ -1,0 +1,176 @@
+---
+title: 'Deployment de una app de Next.js 14 utilizando Docker'
+publishedAt: '2024-01-16'
+summary: 'Apunte tomado por mí que detalla como poder desplegar una aplicación de Next.js 14 en un contenedor de Docker y poder subirla a cualquier host que acepte Docker containers'
+---
+
+<Callout emoji="⚠️">
+Este artículo está incompleto y puede contener errores.
+</Callout>
+
+## La estructura del proyecto de Next.js luego de haber leído este Post
+```ts
+.next 
+app 
+... 
+... 
+Dockerfile -> Archivo a crear y pegar contenido 
+next.config.js -> Archivo a modificar 
+prisma/schema.prisma -> Archivo a modificar sí y solo sí utilizás Prisma
+```
+
+## Dockerfile
+En la carpeta root del proyecto de Next.js tenemos que crear un archivo llamado 'Dockerfile' y colocarle el siguiente contenido
+
+Dockerfile
+
+```dockerfile
+FROM node:18-alpine AS base
+
+# Install dependencies only when needed
+FROM base AS deps
+# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# Install dependencies based on the preferred package manager
+COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
+RUN \
+  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
+  elif [ -f package-lock.json ]; then npm ci; \
+  elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm i --frozen-lockfile; \
+  else echo "Lockfile not found." && exit 1; \
+  fi
+
+
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Next.js collects completely anonymous telemetry data about general usage.
+# Learn more here: https://nextjs.org/telemetry
+# Uncomment the following line in case you want to disable telemetry during the build.
+# ENV NEXT_TELEMETRY_DISABLED 1
+
+RUN yarn build
+
+# If using npm comment out above and use below instead
+# RUN npm run build
+
+# Production image, copy all the files and run next
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV production
+# Uncomment the following line in case you want to disable telemetry during runtime.
+# ENV NEXT_TELEMETRY_DISABLED 1
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+
+# Set the correct permission for prerender cache
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
+
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT 3000
+# set hostname to localhost
+ENV HOSTNAME "0.0.0.0"
+
+# server.js is created by next build from the standalone output
+# https://nextjs.org/docs/pages/api-reference/next-config-js/output
+CMD ["node", "server.js"]
+```
+
+## Configurando el archivo next.config.js
+Lo único que hay que añadir para poder crear la imagen de nuestro proyecto y poder desplegarlo en cualquier hosting con un contenedor de Docker es lo siguiente 
+
+next.config.js
+```ts
+/** @type {import('next').NextConfig} */
+
+const nextConfig = {
+  ...otras configuraciones
+  output: "standalone" -> Añadir esto al objeto de nextConfig
+}
+ 
+module.exports = nextConfig
+```
+
+## Configurando Prisma -> Prisma Client could not locate the Query Engine for runtime "linux-musl-openssl-3.0.x".
+Este error aparece cuando armamos la imagen de Next.js en Windows y tratamos de levantar un contenedor de Docker que contiene Linux como sistema operativo.
+Para solucionarlo, hay que añadir <strong><b>binaryTargets = ["native", "linux-musl-openssl-3.0.x"]</b></strong> en el objeto <b>generator</b> que se encuentra en nuestro schema.prisma
+```prisma
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"] -> ¡Agregar esto!
+}
+```
+
+## Creando la imagen de Next.js con Docker
+Ejecutamos el siguiente comando, en una terminal ubicada en el root de nuestro proyecto, es decir, al mismo nivel que el Dockerfile y el App Directory.
+```shell
+docker build -t NOMBRE_IMAGEN
+Ejecutamos -> docker build -t nextjs-docker .
+```
+
+<Callout emoji="⚠️">
+No olvidar el punto del final luego de nextjs-docker .
+</Callout>
+
+<Callout emoji="⚠️">
+Una vez armada la imagen de Next.js, si tienen paginas con contenido o recursos estáticos NO se regenerarán aunque vuelvan a crear el contenedor. 
+
+La imagen genera el build de Next.js y los contenedores los levantamos en base a esa imagen.
+
+Para hacer un build fresco deberíamos de borrar la imagen previamente creada y luego repetir el proceso de creación de la imagen y el contenedor.
+</Callout>
+
+<Callout emoji="⚠️">
+Según que sistema operativo estés utilizando, Next.js te dará una advertencia si hay algún paquete defectuoso a la hora de ejecutar el proyecto que se encuentra en el contenedor de Docker.
+Esto es porque algunos paquetes, o ciertas herramientas se utilizan de una manera en Linux y en Windows otras.
+
+Yo tuve que cambiar una pequeña configuración de Prisma para que pueda funcionar correctamente el Prisma Client en Linux.
+</Callout>
+
+## Creando el contenedor con nuestra imagen de Next.js
+```shell
+docker container run --name NOMBRE_CONTENEDOR -dp PUERTO_DOCKER:PUERTO_QUE_EXPONE_PROYECTO NOMBRE_IMAGEN
+```
+donde:
+    1. NOMBRE_CONTENEDOR puede ser el que quieras.
+    2. PUERTO_DOCKER es el puerto que utilizarás en el navegador para acceder al proyecto. 
+    3. PUERTO_QUE_EXPONE_PROYECTO es el puerto que está en el script que ejecuta el 
+    proyecto en modo producción. 
+        Es decir, es el puerto en el cual la aplicación está escuchando las solicitudes.
+        
+        <strong><b>Si quisieras cambiarlo podés editar el archivo Dockerfile</b></strong>
+
+        ```Dockerfile
+        EXPOSE 3000 -> CAMBIAR ACÁ. Este sería el valor de PUERTO_QUE_EXPONE_PROYECTO
+        ENV PORT 3000 -> CAMBIAR ACÁ. Este sería el valor de PUERTO_QUE_EXPONE_PROYECTO
+        ```
+    
+    4. NOMBRE_IMAGEN: La imagen que creamos anteriormente en el comando de "docker build -t NOMBRE_IMAGEN ."
+
+Creamos entonces, el contenedor utilizando la imagen: 
+```Dockerfile 
+Ejecutamos -> docker container run --name tomihq.dev -dp 3000:3000 nextjs-docker
+```
+
+## Conclusión
+Crear la imagen, asignar la imagen a un contenedor y desplegar Next.js en una VM es bastante sencillo.
+
+Si no estás seguro para qué nos sirve Docker podés averiguarlo acá: [Docker](/blog/docker)

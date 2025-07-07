@@ -1,0 +1,294 @@
+---
+title: 'Laravel PHP en Ubuntu'
+publishedAt: '2024-02-20'
+summary: 'Apuntes tomados por mí acerca crear proyectos en Ubuntu con Laravel'
+---
+
+## Laravel y PHP en Ubuntu
+He usado PHP en el pasado, y puedo decir que nunca me ha gustado trabajar con él profesionalmente. Sin embargo, me gusta utilizarlo para side-projects personales porque me gusta utilizar lenguajes que son server-side y me permiten hacer aplicaciones full-stack.
+
+Siempre me ha quedado pendiente probar Laravel y NativePHP.
+
+Acá voy a ir anotando lo que vea para poder levantar proyectos de Laravel en Ubuntu.
+Estoy usando Ubuntu en Windows, o, mejor llamado WSL.
+
+Mi idea es usar un S.O de Linux y no estar con Windows porque al estar tan acostumbrado a los comandos de Linux, digamos que Windows me trae muchos problemas jeje.
+
+## Instalando WSL / Ubuntu
+Si estás en Windows lo descargás desde la Store como "Ubuntu"
+Tené en cuenta que al principio te va a pedir que elijas un usuario root y le pongas una contraseña. Es importante que no sea cualquier contraseña porque la vas a necesitar en comandos ejecutados con sudo (super user)
+
+<Callout emoji="⚠️">
+Las instalaciones que haré a continuación, TODAS estarán hechas sobre Ubuntu.
+</Callout>
+
+## Actualizando los paquetes del sistema
+Necesitamos ejecutar esto para traer las versiones de los paquetes actualizadas.
+Es obligatorio, aún cuando recién instalamos Ubuntu.
+
+```shell
+1. sudo apt-get update
+```
+
+## Instalando PHP
+```shell
+1. sudo apt install php libapache2-mod-php
+2. sudo apt install php-cli
+3. sudo apt install php-pgsql -> Porque voy a querer usar una base de datos de Postgres en Docker
+```
+
+<Callout emoji="⚠️">
+Si al ejecutar php --version no nos arroja un error, entonces estamos bien.
+</Callout>
+
+Si la instalación de PHP salió bien, se mostraría algo así: 
+
+```shell
+PHP Warning:  PHP Startup: Unable to load dynamic library 'xmlreader.so' (tried: /usr/lib/php/20210902/xmlreader.so (/usr/lib/php/20210902/xmlreader.so: undefined symbol: dom_node_class_entry), /usr/lib/php/20210902/xmlreader.so.so (/usr/lib/php/20210902/xmlreader.so.so: cannot open shared object file: No such file or directory)) in Unknown on line 0
+PHP Warning:  Module "xml" is already loaded in Unknown on line 0
+PHP Warning:  Module "xmlwriter" is already loaded in Unknown on line 0
+PHP 8.1.2-1ubuntu2.14 (cli) (built: Aug 18 2023 11:41:11) (NTS)
+Copyright (c) The PHP Group
+Zend Engine v4.1.2, Copyright (c) Zend Technologies
+    with Zend OPcache v8.1.2-1ubuntu2.14, Copyright (c), by Zend Technologies 
+```
+
+
+## Instalando Composer
+Si venís de JavaScript, conocerás a Node. Node nos proporciona NPM (Node Package Manager), que es una manera de instalar paquetes.
+
+También existen yarn, pnpm y bun. Pero para instalar estos, sí o sí necesitamos de node. 
+
+Acá, en PHP usamos Composer.
+
+<Callout emoji="⚠️">
+Laravel utiliza node también. Así que acá manejaríamos composer/npm
+</Callout>
+
+### Instalación de CURL 
+
+Para instalar Composer, necesitamos descargarlo vía curl.
+
+```shell
+1. sudo apt-get install curl
+2. sudo apt-get install php php-curl
+```
+
+<Callout emoji="⚠️">
+Es posible espeficar la versión del paquete de php-curl. De la manera que lo dejé yo, la detecta automáticamente.
+Ej: sudo apt-get install php8.1-curl instala curl para la versión de php8.1
+</Callout>
+
+### Instalación de php-xml
+Este paquete lo necesita Laravel
+```shell
+1. sudo apt-get install php-xml
+```
+
+### Instalación de Composer 
+
+```shell
+1. sudo curl -s https://getcomposer.org/installer -o composer-setup.php
+2. sudo php composer-setup.php --install-dir=/usr/local/bin --filename=composer
+3. sudo composer self-update
+```
+
+<Callout emoji="⚠️">
+Si al ejecutar composer -v no nos arroja un error, entonces estamos bien.
+</Callout>
+
+Si la instalación de Composer salió bien, deberían de ver algo como esto al ejecutar composer -v:
+
+``` shell
+PHP Warning:  PHP Startup: Unable to load dynamic library 'xmlreader.so' (tried: /usr/lib/php/20210902/xmlreader.so (/usr/lib/php/20210902/xmlreader.so: undefined symbol: dom_node_class_entry), /usr/lib/php/20210902/xmlreader.so.so (/usr/lib/php/20210902/xmlreader.so.so: cannot open shared object file: No such file or directory)) in Unknown on line 0
+PHP Warning:  Module "xml" is already loaded in Unknown on line 0
+PHP Warning:  Module "xmlwriter" is already loaded in Unknown on line 0
+
+Acá abajo debería decir COMPOSER en grande, como un dibujito
+```
+
+## Habilitar HTTPS para descarga de paquetes en Composer 
+Seguramente, este comando les salve la vida a más de uno.
+
+Si estás experimentando que al crear un proyecto con Laravel, la instalación se queda como trabada en el proceso de "Loading composer repositories with package information" la solución es forzar a Composer en usar HTTPS.
+
+```shell
+1. sudo composer config --global repo.packagist composer https://packagist.org
+```
+
+## Nuestra primera aplicación en Laravel
+Para seguir la convención de la época del FileZilla, creemos nuestro proyecto en /var/www
+```shell
+cd /var/www
+```
+
+Ahora, para crear el proyecto de Laravel 
+```shell
+1. sudo composer create-project laravel/laravel nombreDeTuApp
+```
+
+Si todo sale bien, el último mensaje en mostrarse debería ser
+```shell
+@php artisan key:generate --ansi
+INFO  Application key set successfully.
+```
+
+## Iniciando servidor de desarrollo en Laravel
+Si por algún motivo, te moviste de la carpeta del proyecto: 
+```shell
+cd /var/www/nombreDeTuApp
+```
+
+Y ahora, para ejecutar el proyecto: 
+```shell
+1. php artisan serve
+```
+Por último, deberíamos de ver un mensaje de este tipo:
+
+```shell
+INFO Server running on "http://127.0.0.1:8000"
+```
+
+Si nos dirigimos en nuestro navegador web a esa URL, verán la aplicación de Laravel corriendo
+
+## Solucionando problemas de escritura de archivos temporales
+Un error común es que Laravel no tenga los permisos necesarios para poder escribir en determinadas carpetas del proyecto en el sistema operativo.
+Esto suele pasar MUCHÍSIMO cuando se usa PHP para escribir logs, modificar archivos, etc, etc. Esto es porque el usuario con el que se crea el proyecto no es el nuestro, sino que se crea como root.
+Por más que sea root, hay que darle permisos a su usuario o a www-data. Lo más estándar, sería darle a www-data.
+
+
+```php
+The stream or file '/var/www/native-php-example/storage/logs/laravel.log' could not be opened in append mode: Failed to open stream: Permission denied The exception occurred while attempting to log: The stream or file '/var/www/native-php-'
+```
+
+<Image
+  alt={`Error de permisos de Laravel con Ubuntu para escribir un log`}
+  src={`https://res.cloudinary.com/dha5dv59h/image/upload/v1708485286/error-laravel-permisos-2_d9hnbt.png`}
+  className='rounded-none'
+  width={1200}
+  height={140}
+/>
+
+```php 
+file_put_contents(/var/www/native-php-example/storage/framework/sessions/80KCj8z1AzPSmxsqWTqgEFLPM4S0m39gbA3jXImK): Failed to open stream: Permission denied
+```
+
+
+<Image
+  alt={`Error de permisos de Laravel con Ubuntu`}
+  src={`https://res.cloudinary.com/dha5dv59h/image/upload/v1708485286/error-laravel-permisos-1_qrijgs.png`}
+  className='rounded-none'
+  width={1200}
+  height={120}
+/>
+
+
+Para hacer esto, le damos a toda la carpeta de forma recursiva permisos de www-data.
+
+Vayamos a la carpeta que contiene el proyecto: ```cd /var/www/nombreDeTuApp```
+
+Deberías tener algo parecido a esto: 
+```shell
+tuUsuario@idDeTuPC:/var/www/nombreDeTuApp
+```
+
+Si colocan el comando de sudo ls -l deberían ver todas las carpetas del proyecto, como por ejemplo: README.md, app, artisan, bootstrap, etc.
+
+```shell
+1. sudo chown -R tuNombreDeUsuario:www-data storage 
+2. sudo chown -R tuNombreDeUsuario:www-data bootstrap/cache
+
+Ojo con el segundo comando, hagan un cd bootstrap
+Tiren un sudo ls -l y vean si el usuario que tiene a bootstrap/cache cambió a tuNombreDeUsuario:www-data
+Ej: drwxrwxr-x 2 tomihq   www-data 4096 Feb 20 23:37 cache
+
+Si no llegase a estar de esa forma, ejecuten
+
+sudo chown -R tuNombreDeUsuario:www-data cache
+```
+
+Donde dice tuNombreDeUsuario tenés que poner tu usuario de Ubuntu.
+
+Ahora, volvé a la raíz del proyecto, es decir, cd ../ o cd /var/www/nombreDeTuApp si estabas mal parado.
+```shell
+tuUsuario@idDeTuPC:/var/www/nombreDeTuApp
+```
+
+Si todo salió bien, ejecutá 
+```shell 
+php artisan serve
+``` 
+y tendrías que ver algo así: 
+
+<Image
+  alt={`Pantalla inicial de Laravel al iniciar el proyecto`}
+  src={`https://res.cloudinary.com/dha5dv59h/image/upload/v1708485069/laravel-hello-world_uvzwpt.jpg`}
+  className='rounded-none'
+  width={1200}
+  height={300}
+/>
+
+## Abriendo nuestro proyecto con Visual Studio sabiendo que el proyecto está en Ubuntu
+```shell 
+cd /var/www
+sudo chown -R tuUsuario:www-data /var/www/nombreDeTuApp
+sudo chmod 775 nombreDeTuApp
+``` 
+
+En Visual Studio code descargamos una extensión llamada WSL
+<Image
+  alt={`WSL en Visual Studio Code`}
+  src={`https://res.cloudinary.com/dha5dv59h/image/upload/v1708486410/WSL_lecnrz.png`}
+  className='rounded-none'
+  width={1200}
+  height={300}
+/>
+
+Luego, apretamos CTRL + SHIFT + P y buscamos "Remote Explorer"
+
+A la izquierda, se abrirá un menú.
+
+Seleccionamos el que se llama "Ubuntu" clickeando la ventana con el + por encima que tiene. Esta opción nos abrirá un Visual Studio ya ubicado en nuestro servidor de Ubuntu.
+<Image
+  alt={`WSL en Visual Studio Code, remote explorer`}
+  src={`https://res.cloudinary.com/dha5dv59h/image/upload/v1708486650/ubuntu_remote_uexkje.png`}
+  className='rounded-none'
+  width={1200}
+  height={300}
+/>
+
+Por último, en el explorador del Visual Studio Code que se nos abrió, clickeamos "Open Folder". Verá que aquí recomendará "/home/tuUsuario" pero nosotros tenemos que ir a "/var/www/nombreDeTuApp".
+
+<Image
+  alt={`WSL en Visual Studio Code, remote explorer buscando la carpeta de nuestro proyecto.`}
+  src={`https://res.cloudinary.com/dha5dv59h/image/upload/v1708487071/remote_explorer_folder_search_h8esbe.png`}
+  className='rounded-none'
+  width={1200}
+  height={300}
+/>
+
+
+Una vez que te ubicaste bien en esa ruta, vas a ver que te muestra todos los archivos del proyecto. Si estás ahí mismo parado, entonces ahora tocá "OK".
+
+<Callout emoji="⚠️">
+Si no ves NINGÚN ARCHIVO del proyecto, es porque los permisos que le diste al proyecto en Ubuntu están mal. Procurá que sea de tipo 775.
+</Callout>
+
+Si todo está bien, vas a ver la terminal de bash (ubuntu) y los archivos correspondientes:
+<Image
+  alt={`WSL en Visual Studio Code, remote explorer. Configurando el VSCODE`}
+  src={`https://res.cloudinary.com/dha5dv59h/image/upload/v1708486799/ubuntu_remote_nix1tb.png`}
+  className='rounded-none'
+  width={1200}
+  height={300}
+/>
+
+¡Ahora lo único que falta es, ejecutar en la terminal el comando de php artisan serve!
+
+<Image
+  alt={`PHP ARTISAN SERVE en Ubuntu abierto desde Visual Studio Code`}
+  src={`https://res.cloudinary.com/dha5dv59h/image/upload/v1708486960/php_artisan_serve_ubuntu_f4wk6l.png`}
+  className='rounded-none'
+  width={1200}
+  height={300}
+/>

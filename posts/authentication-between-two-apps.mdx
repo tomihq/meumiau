@@ -1,0 +1,41 @@
+---
+title: 'Autenticación entre dos aplicaciones'
+publishedAt: '2024-01-09'
+summary: 'Apuntes tomados por mí acerca de los tipos de autenticaciones: Front-end con Back-end comunicados por sesiones o por JWT. Además, como se comparten cookies a través de dominios.'
+---
+
+<Callout emoji="⚠️">
+Este artículo está incompleto y puede contener errores.
+</Callout>
+
+## Sesiones front-back (en mismo dominio) 
+Para poder usar las sesiones de Django con React.js deben estar ne la misma carpeta root, es sdecir, React debe estar como una carpeta embebida dentro del proyecto de Django. Esto es porque para usar sesiones deben estar en el mismo y exactamente el MISMO dominio. En este caso, como acá lo estamos usando como api JAMÁS vamos sa poder compartir la misma sesión que hace el auth de django solo. Nótese que si estuviese el proyecto de React embebido dentro de Django, debería usarse credentials: 'same-origin' y las siguientes configuraciones en Django: 
+
+1. CRSF_COOKIE_SAMESITE = 'Strict'
+2. SESSION_COOKIE_SAMESITE = 'Strict'
+3. CRSF_COOKIE_HTTPONLY = False
+4. SESSION_COOKIE_HTTPONLY = True 
+
+En producción
+
+3. CRSF_COOKIE_HTTPONLY = True
+4. SESSION_COOKIE_HTTPONLY = True
+
+## Sesiones Front - Back (no en mismo dominio) -> Tokens
+Si los dos proyectos están separados, en dos dominios totalmente distintos, no queda otra que usar Tokens.
+        
+## Compartir Cookies -> Solo exactamente en mismo dominio
+Compartir cookies se pueden compartir cookies en el mismo dominio pero NO exactamente tema de Auth con sesiones. Es decir, podemos poner el mismo dominio ej: A.example.com y B.example.com si guardamos una cookie en example.com entonces en A y en B están las mismas COOKIES. Lo que NO podemos hacer es usar sesiones en dos dominios distintos pues deben ser iguales y A!=B. 
+
+Para compartir cookies en el mismo dominio ej: A.example.com y B.example.com.
+
+Ejemplo con Django (archivo settings.py):
+1. SESSION_COOKIE_DOMAIN = '.localhost'
+2. SESSION_COOKIE_SAMESITE = 'None'
+3. SESSION_COOKIE_SECURE = True
+4. CORS_ALLOW_CREDENTIALS = True
+
+Para setearlas, simplemente podemos devolverle al frontend una response con una cookie incluida. 
+1. response = HttpResponse()
+2. response.set_cookie('random_number', random.randint(0, 100))
+Nótese que para que la cookie haga efecto debe devolverse un HttpResponse al cliente a devolver la cookie.

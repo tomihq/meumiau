@@ -1,0 +1,361 @@
+---
+title: 'Node en Digital Ocean con PM2, NGINX, Dominio Personalizado y Certificado SSL'
+publishedAt: '2024-09-15'
+summary: '¿Necesitás levantar un backend de Node en Digital Ocean con PM2, y que un dominio apunte a este? Acá lo vamos a ver'
+---
+## Importante 
+No voy a mostrar los pasos de levantar el backend en DigitalOcean, sino el proceso de PM2 en adelante. 
+Si querés ver como levantarlo, tenés que agregar claves SSH y clonar el repositorio del backend: mirá acá [Fazt Deploy](https://www.youtube.com/watch?v=gmfUNDmJDuk)
+
+## Actualizar los paquetes de Ubuntu 
+```shell
+sudo apt-get update 
+```
+Y luego
+```shell
+sudo apt-get upgrade 
+```
+
+## Instalando Node vía NVM  
+NVM en un servidor es súper útil porque te permite tener varias versiones de Node instaladas y que cada proyecto pueda utilizar su propia versión.
+Para poder configurar esto basta con crear un archivo llamado <b> .nvmrc </b> en la raíz de tu proyecto, en la cual solamente tenés que indicar qué version querés utilizar.
+
+Ej.: v20.17.0 
+
+Una vez que tenés eso, ahora sí instalemos NVM en nuestro servidor.
+Entrá a [Install Nvm](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) y copiá el comando de curl que sea estable, por ejemplo: 
+```shell
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+``` 
+
+Este mismo comando, pegalo en tu servidor de DigitalOcean y cuando termine, ejecutá el siguiente comando para que refleje la configuración de nvm
+```shell 
+source ~/.bashrc
+```
+
+Ahora, instalá todas las versiones de node que tengas en tus proyectos que vas a levantar. En mi caso, es la 20.17.0 entonces 
+```shell 
+nvm install node@20.17.0
+```
+
+Esto va a permitir que cuando después ejecutes con pm2, la línea de <b> nvm use </b> utilice la versión que espera el proyecto (la definida en .nvmrc)
+## Instalando PM2 
+PM2 es un Process Manager de Node que nos permite ejecutar y gestionar varias aplicaciones en simultáneo.
+
+### Preparativos
+En la raíz de tu proyecto del backend, create un archivo que se llame <b> ecosystem.json </b>.
+Este archivo es súper importante porque te va a permitir manejar las configuraciones que va a tomar PM2 al ejecutar. 
+Te dejo un esqueleto común 
+
+```json 
+{
+  "apps": [
+    {
+      "name": "nombreProyecto",
+      "script": "dist/index.js",
+      "env_production": {
+        "NODE_ENV": "production"
+      },
+      "env_dev": {
+        "NODE_ENV": "development"
+      },
+      "instances": 1,
+      "log-date-format": "DD-MM HH:mm:ss.SSS"
+    }
+  ],
+  "deploy": {
+    "development": {
+      "pre-deploy-local": "yarn install --frozen-lockfile --link-duplicates && yarn build",
+      "post-deploy": "yarn install && pm2 startOrRestart ecosystem.json --env development",
+      "env": {
+        "NODE_ENV": "development"
+      }
+    }
+}
+
+```
+Entonces para poder levantar el proyecto vas a ejecutar los siguientes comandos 
+
+```shell
+yarn install --frozen-lockfile --link-duplicates && yarn build
+yarn install && pm2 startOrRestart ecosystem.json --env development
+```
+<b> Importante: </b> Esto quiere decir que si subís un cambio al repositorio deberías: entrar al servidor, hacer un fetch desde git, hacer el pull y ejecutar exactamente los mismos comandos que arriba. Esto porque vamos a estar ejecutando un build y no la aplicación en modo desarrollo (nodemon).
+
+<b> Importante 2: </b> Si usás yarn, npm, bun o cualquier otro package manager considerá cambiar los comandos correspondientes de install y build.
+
+### Configurando PM2 en el servidor
+
+Ejecutá
+
+```shell
+sudo npm install -g pm2
+```
+
+Ahora dirigite a la ruta donde tenés tu proyecto en el servidor, en mi caso es projects/proyecto entonces hago 
+
+```shell
+cd projects/proyecto
+```
+
+Ejecutá ahora los comandos de pre-deploy-local y post-deploy del archivo ecosystem.json 
+
+```shell
+yarn install --frozen-lockfile --link-duplicates && yarn build
+yarn install && pm2 startOrRestart ecosystem.json --env development
+```
+
+Luego, debería levantarse todo correctamente. 
+Podés chequearlo haciendo 
+```shell
+pm2 list -> pm2 logs tuProyecto 
+```
+
+#### PM2 en Startup
+Si se te cae el servidor, sería un bajón tener que levantar todo vos manualmente. Imaginate que estás durmiendo.
+
+Por suerte, PM2 tiene una configuración para levantarse con el servidor en caso de restart. 
+
+Ejecutá 
+```shell
+pm2 startup systemd
+```
+
+¡Listo! 
+
+## Configuración de NGINX
+### Instalando NGINX 
+```shell
+sudo apt install nginx
+```
+
+### Configurando NGINX 
+Nos dirigimos a /etc/nginx/sites-available con cd /etc/nginx/sites-available.
+Habilitamos el Firewall y le permitimos a Nginx
+<ol>
+    <li> sudo ufw enable</li>
+    <li> sudo ufw allow 'Nginx Full' </li>
+    <li> sudo ufw delete allow 'Nginx HTTP' </li>
+</ol>
+Luego de haber hecho estas 3 cosas, si colocamos sudo ufw status debería verse algo parecido a esto 
+
+```shell 
+    Output
+    Status: active
+
+    To                         Action      From
+    --                         ------      ----
+    OpenSSH                    ALLOW       Anywhere
+    Nginx Full                 ALLOW       Anywhere
+    OpenSSH (v6)               ALLOW       Anywhere (v6)
+    Nginx Full (v6)            ALLOW       Anywhere (v6)
+```
+Ahora necesitamos crear un archivo que le permitirá a NGINX ejecutar cuando entremos vía el dominio que queramos, por lo tanto ejecutamos.
+
+#### Verificando si NGINX funciona 
+Ejecutá 
+```shell 
+sudo nano default
+```
+y pegá la siguiente configuración 
+
+```shell
+server {
+
+        root /var/www/html;
+        index index.html index.htm index.nginx-debian.html;
+
+        server_name _;
+
+        location / {
+                default_type 'text html; charset=utf-8';
+                proxy_pass http://localhost:puertoApp;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host $host;
+                proxy_cache_bypass $http_upgrade;
+                include proxy_params;
+         }
+
+}
+```
+
+De acá lo único que tenes que cambiar es 1 cosa: 
+<ol> 
+<li> puertoApp: colocá literalmente el puerto donde levantás tu app de Node</li> 
+</ol>
+
+Para cerrar nano, podés hacer CTRL + O, colocarle un nombre al archivo y luego CTRL + X.
+
+#### Verificando Configuración de Nginx 
+Ejecutá 
+```shell 
+sudo nginx -t
+```
+
+Si está todo bien debería salirte algo como esto
+
+```shell 
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+```
+
+Ahora, necesitamos crear un link desde sites-available a sites-enabled para que NGINX pueda leer nuestra configuración. 
+
+```shell
+sudo ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
+```
+
+Por último, reiniciemos NGINX para que tome nuestros cambios 
+
+```shell 
+sudo systemctl reload nginx
+```
+
+Entonces ahora si entrás por el navegador a la IP del servidor de DigitalOcean donde tenés tu servidor debería estar sirviendo la API 
+
+```shell 
+http://tuIp
+```
+
+¡Importante el http! Después vamos a ver como levantar el https.
+
+#### Configurando NGINX con nuestro dominio personalizado
+En cd /etc/nginx/sites-available, ejecutá 
+
+```shell 
+sudo nano tuDominio
+```
+
+Un ejemplo porque puede traer confusión, si tu dominio es: https://www.tudominio.com.ar/ entonces tendrías que colocar 
+
+```shell 
+sudo nano tudominio.com.ar
+```
+
+Cuando hagas algo como esto, pegá la siguiente configuración (no te gastes mucho) excepto en la que te voy a decir 
+
+```shell
+server {
+
+        root /var/www/html;
+        index index.html index.htm index.nginx-debian.html;
+
+        server_name tuDominio www.tuDominio;
+
+        location / {
+                default_type 'text html; charset=utf-8';
+                proxy_pass http://localhost:puertoApp;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host $host;
+                proxy_cache_bypass $http_upgrade;
+                include proxy_params;
+         }
+
+}
+```
+
+De acá lo único que tenes que cambiar son 3 cosas: 
+<ol> 
+<li> tuDominio: colocá literalmente tu dominio</li> 
+<li> www.tuDominio: el subdominio www de tuDominio</li> 
+<li> puertoApp: colocá literalmente el puerto donde levantás tu app de Node</li> 
+</ol>
+
+Para cerrar nano, podés hacer CTRL + O, colocarle un nombre al archivo y luego CTRL + X.
+
+#### Verificando Configuración de Nginx 
+Ejecutá 
+```shell 
+sudo nginx -t
+```
+
+Si está todo bien debería salirte algo como esto
+
+```shell 
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+```
+
+Creamos el link de sites-available a sites-enabled 
+```shell
+sudo ln -s /etc/nginx/sites-available/tuDominio /etc/nginx/sites-enabled/
+```
+
+Por último, reiniciemos NGINX para que tome nuestros cambios 
+
+```shell 
+sudo systemctl reload nginx
+```
+
+#### ¿Qué hicimos hasta ahora?
+Levantamos nuestra app de Node en DigitalOcean configuramos nuestro dominio en el VPS. Sigamos ahora configurando los DNS de nuestro dominio.
+
+### Configurando los DNS
+Dirigite a la plataforma <b> que gestiona tu dominio</b> y buscá gestor de DNS, DNS, o como se llame en tu plataforma. Deberías de ver muchos registros del tipo A, MX, TXT, etc. 
+Ojo, hago énfasis en <b> que gestiona tu dominio</b> porque no necesariamente manejás los DNS desde allí en muchos casos. Por ejemplo, yo tengo el dominio en DonDominio pero los DNS los manejo en Cloudflare.
+
+Una vez que estás en el GESTOR de DNS, tenés que agregar 2 registros A.
+
+```shell
+  A   @     DROPLET_IP
+  A   www   DROPLET_IP
+```
+<i> DROPLET le llamamos al VPS en DigitalOcean. Sería la IP que usamos para ingresar a través de Ubuntu. </i>
+
+Si está todo bien, deberías colocar el dominio en [DNS Checker](https://dnschecker.org/) y deberías de ver la IP del servidor en DigitalOcean. 
+
+Considerá que tarda hasta aproximadamente 24hs en reflejar el cambio aunque normalmente en 10 minutos (como mucho) debería estar todo ok.
+
+### Levantando el certificado de HTTPS en nuestro backend 
+Instalá este paquete 
+```shell
+sudo apt install certbot python3-certbot-nginx
+```
+Ejecutá 
+```shell
+sudo ufw status
+```
+y revisá que te de el siguiente resultado 
+
+```shell
+    Output
+    Status: active
+
+    To                         Action      From
+    --                         ------      ----
+    OpenSSH                    ALLOW       Anywhere                  
+    Nginx HTTP                 ALLOW       Anywhere                  
+    OpenSSH (v6)               ALLOW       Anywhere (v6)             
+    Nginx HTTP (v6)            ALLOW       Anywhere (v6)
+```
+
+Si el resultado que te dió es diferente, fijate en hacer lo de arriba de vuelta del ufw. 
+
+Ejecutá 
+```shell 
+sudo certbot --nginx -d tuDominio -d www.tuDominio
+```
+Seguí los pasos que te pide (son 2). Si todo sale bien te va a mostrar un mensaje como este 
+
+```shell 
+Deploying certificate
+Successfully deployed certificate for tuDominio to /etc/nginx/sites-enabled/tuDominio
+Successfully deployed certificate for www.tuDominio to /etc/nginx/sites-enabled/tuDominio
+Congratulations! You have successfully enabled HTTPS on https://tuDominio and https://www.tuDominio
+```
+
+Hay un posible error muy común y es este: 
+```shell 
+Certbot failed to authenticate some domains (authenticator: nginx). The Certificate Authority reported these problems:
+  Domain: tuDominio
+  Type:   unauthorized
+  Detail: IP: Invalid response from http://tuDominio/.well-known/acme-challenge/B3gsR-gkB54SfIgeQdy1Z7bWJiWq50NRw5RY3MC6_40: 404
+```
+
+Si IP es <b> diferente </b> a la IP de tu droplet de DigitalOcean, entonces es porque configuraste mal los registros DNS desde el gestor de dominio.
+
+Si todo salió bien, entoncés probá entrando a https://www.tuDominio y deberías ver todo joya.

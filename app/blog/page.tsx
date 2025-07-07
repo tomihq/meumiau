@@ -26,7 +26,7 @@ const blogPosts = getBlogPosts()
                     <div className="flex items-start gap-3 p-4 rounded-lg hover:bg-purple-500/10 transition-colors cursor-pointer">
                       <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 flex-shrink-0"></div>
                       <div className="flex-1">
-                        <h2 className="text-gray-100 leading-10 font-bold hover:text-purple-300 transition-colors mb-1">
+                        <h2 className="text-3xl text-gray-100 leading-10 font-bold hover:text-purple-300 transition-colors ">
                           {post.metadata.title}
                         </h2>
                         <p className="text-sm text-gray-500 mb-2">{post.metadata.publishedAt}</p>

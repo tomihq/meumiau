@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 @layer utilities {
@@ -39,15 +39,8 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -73,14 +66,6 @@ body {
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -93,158 +78,175 @@ body {
   }
 }
 
-.prose {
-  color: white;
-}
-
-a:hover{
-    text-decoration: underline;
-    color: white;
-}
 
 
 .prose p {
+  @apply text-gray-200 mb-6;
+  font-size: 1.125rem;
+  line-height: 1.8;
+}
+
+.prose b {
   color: white
 }
 
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  @apply text-white font-bold;
 
+}
+
+.prose h1 {
+  font-size: 2.5rem;
+  line-height: 1.2;
+}
+
+.prose h2 {
+  font-size: 2rem;
+  line-height: 1.3;
+  @apply border-b border-white/20 pb-2;
+}
+
+.prose {
+  max-width: none;
+}
+.prose h3 {
+  font-size: 1.5rem;
+  line-height: 1.4;
+}
+
+.prose h4 {
+  font-size: 1.25rem;
+  line-height: 1.5;
+}
+
+.prose strong {
+  @apply text-white font-semibold;
+}
+
+.prose a {
+  @apply text-purple-400 hover:text-purple-300 transition-colors underline decoration-purple-400/50 hover:decoration-purple-300;
+}
+
+.prose code {
+  @apply bg-white/10 text-green-500 px-2 py-1 rounded text-sm font-mono;
+}
+
+.prose pre {
+  @apply bg-black/40 border border-white/10 rounded-lg overflow-x-auto p-6 my-6;
+}
+
+.prose pre code {
+  @apply bg-transparent text-green-500 p-0 text-sm;
+  border: none;
+  border-radius: 0;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-purple-500 pl-6 py-2 bg-white/5 rounded-r-lg my-6;
+}
+
+.prose blockquote p {
+  @apply text-gray-300 italic;
+}
+
+.prose ul,
+.prose ol {
+  @apply my-6;
+}
+
+.prose li {
+  @apply text-gray-200 mb-2;
+}
+
+.prose table {
+  @apply w-full border-collapse bg-white/5 rounded-lg overflow-hidden my-6;
+}
+
+.prose th {
+  @apply bg-white/10 text-white font-semibold p-4 text-left border-b border-white/20;
+}
+
+.prose td {
+  @apply text-gray-200 p-4 border-b border-white/10;
+}
+
+.prose img {
+  @apply rounded-lg shadow-lg my-8;
+}
+
+/* Anchor Links */
 .prose .anchor {
   @apply absolute invisible no-underline;
-
-  margin-left: -1em;
+  margin-left: -1.5em;
   padding-right: 0.5em;
   width: 80%;
   max-width: 700px;
   cursor: pointer;
 }
 
-.anchor:hover {
+.prose .anchor:hover {
   @apply visible;
 }
 
-.prose a {
-  color: white;
-}
-
 .prose .anchor:after {
-  @apply text-neutral-300 dark:text-neutral-700;
-  content: '#';
-}
-
-.prose table {
-  color: white;
+  @apply text-gray-500;
+  content: "#";
 }
 
 .prose *:hover > .anchor {
   @apply visible;
 }
 
-.prose pre {
-  @apply bg-neutral-50 dark:bg-neutral-900 rounded-lg overflow-x-auto border border-neutral-200 dark:border-neutral-900;
+/* Responsive Typography */
+@media screen and (max-width: 768px) {
+  .prose {
+    font-size: 1rem;
+  }
+
+  .prose h1 {
+    font-size: 2rem;
+  }
+
+  .prose h2 {
+    font-size: 1.75rem;
+  }
+
+  .prose h3 {
+    font-size: 1.5rem;
+  }
+
+  .prose p {
+    font-size: 1rem;
+  }
 }
 
-.prose code {
-  color: black
+/* Custom scrollbar for code blocks */
+.prose pre::-webkit-scrollbar {
+  height: 8px;
 }
 
-.prose pre code {
-  @apply p-0;
-  border: initial;
-  line-height: 1.2;
+.prose pre::-webkit-scrollbar-track {
+  @apply bg-white/5 rounded;
 }
 
-.prose code span {
-  @apply font-medium;
-  height: fit-content;
-  display:inline-block;
+.prose pre::-webkit-scrollbar-thumb {
+  @apply bg-white/20 rounded hover:bg-white/30;
 }
 
-.prose img {
-  /* Don't apply styles to next/image */
-  @apply m-0;
+@layer components {
+  .prose pre p {
+    @apply m-0;
+  }
 }
 
-
-
-
-.prose > :first-child {
-  /* Override removing top margin, causing layout shift */
-  margin-top: 1.25em ;
-  margin-bottom: 1.25em ;
-}
-
-pre::-webkit-scrollbar {
-  display: none;
-}
-
-pre {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
-  padding: 1rem;
-}
-
-/* Remove Safari input shadow on mobile */
-input[type='text'],
-input[type='email'] {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-}
-
-.prose .tweet a {
-  text-decoration: inherit;
-  font-weight: 500;
-}
-
-table {
+.sh__line {
   display: block;
-  max-width: fit-content;
-  overflow-x: auto;
-  white-space: nowrap;
-}
-
-.prose .callout > p {
   margin: 0 !important;
-}
-
-.title {
-  text-wrap: balance;
-}
-
-h1 {
-  font-size: 48px;
-  font-weight: bold;
-  line-height: 1;
-}
-
-h2 {
-  font-size: 36px;
-  line-height: 2.5rem;
-}
-
-@media screen and (min-width: 768px) {
-  h1{
-    font-size: 60px;
-    line-height: 1;
-    
-  }
-  h2{
-    font-size: 2.25rem;
-    line-height: 1.75rem;
-  }
-}
-
-.prose h2,
-.prose h3,
-.prose h4,
-.prose h5,
-.prose h6 {
-  color: white;
-}
-.prose strong {
-  color: white
-}
-
-.prose th {
-  color: white
+  padding: 0;
+  line-height: 0; 
 }

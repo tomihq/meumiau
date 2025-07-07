@@ -693,7 +693,7 @@ export default function NotePage({ params }: { params: { slug: string } }) {
       <section className="container mx-auto px-6 py-20">
         <div className="max-w-4xl mx-auto">
           <Link href="/notes">
-            <Button variant="outline" className="mb-6 mt-16 border-purple-500/50 hover:bg-purple-500/20 bg-transparent">
+            <Button variant="outline" className="mb-6 mt-16 border-purple-500/50 hover:bg-purple-500/20 bg-transparent hover:text-white">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Notes
             </Button>

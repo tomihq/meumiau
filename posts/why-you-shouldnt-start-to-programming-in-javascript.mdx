@@ -1,0 +1,219 @@
+---
+title: '¿Nuevo en programación? No empieces con JavaScript.'
+publishedAt: '2024-01-29'
+summary: 'Post de por qué considero que sí sos nuevo en programación NO deberías empezar con JavaScript. La obesesión de la gente por JavaScript, el odio a PHP y a lo que está yendo a ser React con conceptos parecidos a PHP pero en TypeScript.'
+---
+
+<Callout emoji="⚠️">
+Este artículo está incompleto y puede contener errores.
+</Callout>
+
+## Contexto
+Está claro que JavaScript está en auge. React.js, Node.js, Next.js, Angular, Vue, Svelte, Astro, TypeScript, React Native y muchas cosas más contribuyen al día a día de JavaScript, te permiten hacer grandes cosas con tan poco y además "llueven las ofertas laborales" pero ¿realmente vale la pena aprenderlo? La respuesta es sí pero no te apures. 
+
+Te doy mi opinión al respecto. 
+
+## ¿Por qué considero que no se debería de empezar a programar en JavaScript? 
+Durante la pandemia del año 2020, se hizo mucho más fuerte el tema de trabajar remoto y ganar millones de dólares ¡sí, vamos todos a aprender programación! millones de bootcamps, cursos, hasta agencias que te "ayudaban" a estudiar gratis y empezabas a pagar luego de conseguir un trabajo.
+
+En ese tiempo empezaron a aparecer memes como estos:
+
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+<Image
+  alt={`meme`}
+  src={`https://res.cloudinary.com/dha5dv59h/image/upload/f_auto,q_auto/basw2ys4kk22la5z5ap0`}
+  className='rounded-none'
+  width={400}
+  height={80}
+/>
+<Image
+  alt={`meme`}
+  src={`https://res.cloudinary.com/dha5dv59h/image/upload/f_auto,q_auto/d1xe9bsw8csx2l28ntmf`}
+  className='rounded-none'
+  width={400}
+  height={80}
+/>
+</div>
+
+
+Estos memes aparecieron porque justamente porque todos empezaron a aprender lo MISMO sin darle el foco a lo que realmente importa. 
+
+¿Qué es lo que se enseñaba en este tipo de cosas? A tirar código, pero no a programar. Programar es mucho más que tirar líneas de código. Ni más ni menos, te enseñaban simplemente tirar líneas de código. 
+
+Crecieron con fuerza los conceptos de "yo soy full-stack", "yo soy back-end", "yo soy front-end" y mucha gente se quedó en el camino por enamorarse de las tecnologías que les inculcaron y hacer proyectos una y otra vez, que todos terminaban siendo parecidos de alguna manera.
+
+
+Patrones de diseño, algoritmos y estructuras de datos, escalabilidad, arquitectura de software, complejidad algorítmica, programación funcional, programación concurrente y asíncrona, programación orientada a objetos, diagramas UML, entender como armar una base de datos, normalización, armar diccionarios de datos, casos de uso, distintos niveles de normalización, requerimientos, design docs, etc, etc.
+
+Estas son algunas cosas que se dejaron con la falsa esperanza de "¡cuando ganes experiencia, lo vas a saber mejor!"
+
+ojo: no necesariamente digo que deberían de saberlo o enseñarlo, pero al menos uno debe saber que esas cosas existen.
+
+¿Fue culpa de esas personas que querían empezar a programar? No. ¿quién no entraría un bootcamp o curso porque una o varias personas hayan empezado a ganar miles de dólares? 
+
+Uno de estos lenguajes que se empezó a enseñar con muchísima fuerza fue JavaScript pero ¿cual es el problema? Que nadie ha hecho énfasis en los conceptos que te van a ayudar día a día.
+
+No por nada en la universidad te enseñan arquitectura de software, programación orientada a objetos, funcional, imperativa, complejidad algorítmica, álgebra, análisis matemático, etc, etc. Aunque no lo creas, materias como Álgebra y Análisis Matemático si bien no te sirven para programar (sí para un lado más científico), te sirven para tener una capacidad de abstraerte mucho más y empezar a razonar de ciertas cosas.
+
+La vida de desarrollador se trata de tener la facilidad de ir resolviendo problemas con las herramientas que se conocen, ser capaces de tener una capacidad de abstracción en ciertos problemas de la vida real, aprender a buscar en internet, pero también tener el respaldo o conocimiento técnico básico que te permita ir puliendo y creciendo. 
+
+El problema es que al no conocer que esas cosas existen, se hace dificil "indagar" y encontrar el contenido correcto. Al final, muchos terminan sufriendo preguntándose "¿qué mas necesito para conseguir un trabajo? ¡mirá mi portfolio, tengo 2032320302 proyectos y cursos terminados!"
+
+¿Quién no ha visto a millones de personas haciendo cursos que te muestran como hacer CRUD's una y otra vez?
+
+
+<Callout emoji="⚠️">
+Las siglas CRUD significan "CREATE, READ, UPDATE Y DELETE" y suele ser común encontrarlos en APIs. Por ejemplo: Un CRUD de usuarios sería un módulo de una aplicación que te permita crear, leer, actualizar y eliminar los usuarios.
+</Callout>
+
+## Conociendo a JavaScript 
+JavaScript es increíble, es un lenguaje súper flexible y te ayuda hasta ser productivo de la cantidad de cosas que te hace hacer pero ¿cuál es el problema? El problema es que al ser un lenguaje tan pero tan flexible que te permite hacer cualquier cosa, uno romantiza cierta tecnología y se cierra de lo que realmente importa: considerar a los lenguajes como herramientas, con sus beneficios y contras y poder elegir uno u otro según el problema a solucionar.
+
+JavaScript es un MUNDO ENORME pero remontémonos a la época de PHP + jQuery + Ajax, de hecho, yo empecé allí, donde lo único que había era archivos de php sueltos, la forma de hacer deploy era mediante FTP y todas las interfaces de usuario se veían horribles.
+
+Esas tecnologías "horribles" para muchos, hoy en día como PHP, jQuery y Ajax son prácticamente el 90% de los sitios web allí afuera pero muchos las esquivan por ser "tecnologías viejas".
+
+Hablemos un poco de React.js, la librería de JavaScript que nos ayuda a armar interfaces usando JSX, lo que fue y lo que es ahora.
+
+## La historia de React, el full client-side y sus problemáticas
+
+React es prácticamente hermoso, de hecho, trabajo con ella pero utilizando el framework de Next.js y Remix.
+¿Qué es lo que pasó con React en estos tiempos? React, antes era una SPA, es decir, una Single Page Application.
+Definíamos las rutas utilizando algo llamado React Router DOM que básicamente si la URL de la página era X, entonces renderizabamos el componente Y que defínia a la pantallita que queríamos ver.
+
+¿Vieron cuando en las páginas web tienen algo como "dominio/pagina1", "dominio/pagina2"? ¡Bueno! En React.js eso no existe "teóricamente" porque pagina1 y pagina2 son solamente componentes, no páginas. Esta orientación de páginas las implementó Next.js (framework de React).
+
+Las aplicaciones hechas con React eran totalmente client-side. Es decir, prácticamente TODA la carga de la aplicación se daba del lado del cliente y el cliente podía interactuar totalmente con ella. Pero, ¿cuál es el problema con esto? El problema con esto es que: temas como SEO, posicionamiento web, temas de autorización y/o seguridad de rutas, forma de manejar las páginas (cuando mostrar un contenido u otro), page-speed, user-experience, manejo de estados por contexto y la cantidad de JavaScript enviada al cliente generaba un gran problema ¡Además de que si las personas no tenían el JavaScript activo en el navegador no podían usar nuestra app!
+
+¡Estabamos sobrecargando todas las aplicaciones dándole a un usuario con posible conexión lenta que descargue todo tipo de recursos y hasta a veces, spinners interminables en la pantalla que hasta eran tediosos!
+
+<Callout emoji="⚠️">
+Según Google, si un sitio web tarda más de 1 segundo en cargar, perdiste a tu visitante.
+</Callout>
+
+¿Qué es lo que sucedió ahora con React? React introdujo los React Server Components (RSC), y aquí viene el problema. Para poder utilizar los componentes de la misma forma que antes hay que usar una palabra reservada 'use client'. 
+Fue un cambio grande. Mucha gente no conoce el concepto o le cuesta entender la diferencia entre algo que es renderizado por el lado del servidor o renderizado por el cliente, cuales son sus limitaciones y cuando usar cada uno.
+
+Ingenieros de Software como [@t3dotgg](https://twitter.com/t3dotgg) o un ex miembro del equipo de React (uno de los más importantes) [@dan_abramov]( https://twitter.com/dan_abramov2) se la pasan hablando continuamente en X de este cambio rotundo de React con distintos desarrolladores que indican que se ha tornado "complicado", y en parte tienen razón, porque si bien antes la aplicación era totalmente client-side, ahora ha ganado demasiada complejidad para algunos con el tema de server-side con TypeScript. ¿Mi opinión? Esto se está poniendo cada vez mejor.
+
+Veamos un Tweet de Theo el cual le responde a una persona que utilice 'use client' si quiere volver a utilizar React de la misma forma que antes. Obvio que en un tono sarcástico, porque si querés trabajar en la misma forma que antes podés hacerlo, nadie te está obligando a usar los RSC, pero la realidad es que el server-side da demasiadas ventajas.
+<StaticTweet id="1751367918313750743" />
+
+Ahora veamos un Tweet de Dan Abramov, contestando la misma duda por 10091o391203910 vez, que básicamente los React Server Components terminan renderizando a los React Components de client-side y no al revés, porque es imposible.
+<StaticTweet id="1751659674091372855" />
+<StaticTweet id="1751660474658099404" />
+<StaticTweet id="1751661500920463542" />
+<StaticTweet id="1751663178172256756" />
+¡Nótese que Dan hace referencia a que jQuery al ser client-side no podría renderizar a PHP que es server-side porque en realidad, siempre pero siempre, el server va primero! ¡Abajo esto lo detallo mucho más!
+
+En este momento, el React que se conocía (full client-side) cada vez se usa menos. Librerías como React Query nos ayudaban mucho a manejar los estados asíncronos, y también el Context o Redux que nos permitían manejar en gran medida el estado de la aplicación irán en disminución de su uso por el cambio rotundo hacia donde va React.
+
+Está claro que Frameworks como Next.js son indispensables hoy en día para trabajar con React, y el mismo React Core Team lo dice. Next.js es un framework que hasta la versión 12 nos ofrecía:
+1. Generado de páginas de manera estática (SSG)
+2. Generado de páginas de manera estática con un eliminado de caché y rebuild de esa página luego de un tiempo (ISR).
+3. Generado de páginas de manera estática con un eliminado de caché y rebuild de esa página en base a eventos (On-Demand Revalidation).
+4. Generado de páginas del lado del servidor (SSR).
+5. Poder definir páginas sin necesidad de un React Router DOM que era hasta tedioso configurarlo.
+6. Utilizar cookies del lado del servidor y/o middlewares para realizar ciertas acciones.
+
+Este tipo de cosas que nos ofrecía Next, nos hacía priorizarlo por encima de React.
+
+Next.js, en la versión 13 introdujo demasiados conceptos, y al mismo tiempo también lo hizo React cambiando el modelo mental de toda la gente a algo como esto:
+1. App Router (components server-side por defecto)
+2. Server Actions (acciones del servidor ejecutadas desde el cliente)
+3. Caching (para poder devolver una respuesta más rápida desde el servidor) y tener un mejor Time To First Byte (TTFB)
+4. Manera de comunicarse con la base de datos ¡se hace directamente desde el servidor de React sin exponer la URL del servidor! 
+5. Se le comenzó a dar menos uso al LocalStorage y volvieron las cookies, sí, como en PHP
+6. Suspense y Fallback con Server Components para agilizar la carga inicial de la página.
+7. Librerías como React-Query en frameworks como Next.js por defecto server-side han disminuido su uso, también los hooks como useEffect (antes se usaban para enviarle la solicitud al servidor desde el cliente ¡pero como ahora es server-side por defecto no hace falta hacerlo desde el cliente muchas veces!)
+8. La mayoría de las librerías que necesitaban exclusivamente interactividad estan obligadas a migrar a server-side o empezar a observar una disminución de su uso.
+9. Caching de la API de fetch propia de Next
+10. Placeholders blur para las imágenes generadas desde el servidor
+11. Manejar las redirecciones según lo que haga el cliente por defecto desde el servidor (antes con React puro se hacía desde client-side, era mucho más inseguro)
+y mucho más.
+12. Revalidaciones de paths, o de peticiones con tags.
+
+
+## React y los React Server Components 
+Acá, en este momento, es cuando realmente agradezco haber utilizado lenguajes como PHP. PHP es un lenguaje que podrá ser feo, horrible, tremendamente viejo, pero la realidad es que hoy en día se sigue usando, muchos de los proyectos siguen escritos en este y está en TODAS las conversaciones que se habla acerca de los React Server Components y lo que se está convirtiendo Next.js para algunos.
+
+Vamos a distinguir entre los lenguajes puramente del lado del servidor y del lado del cliente.
+
+Para explicarlo de manera sencilla, voy a usar un modelo mental que he utilizado durante años y que todavía encuentro útil.
+
+Server-Side tradicional: 
+1. PHP (server) maneja toda la lógica, incluyendo consultas a la base de datos, gestión de sesiones de usuario y decisiones sobre qué contenido devolver y cómo sanitizarlo.
+2. PHP renderiza el HTML que ve el cliente habiendo aplicado los estilos correspondientes.
+3. Ese HTML tiene un script de JavaScript, y toda la configuración de eventos que le proporcionó PHP que puede ejecutar.
+4. El JavaScript solo se ejecuta cuando el usuario interactúa con el sitio web, permitiendo la interactividad a través del Document Object Model de JavaScript (DOM) enviando peticiones nuevamente al servidor de PHP (antes se usaba jQuery para manipular los elementos y Ajax para las llamadas asíncronas).
+5. Las llamadas al servidor se realizan mediante HTTP, a menudo a una API con un proxy reverso/balanceador de carga para mayor seguridad.
+6. Las respuestas del servidor suelen requerir una recarga de página para que los cambios se reflejen, ya que el JavaScript interactúa principalmente con PHP.
+
+¿Cual es el problema de esta orientación? Que toda nuestra aplicación, está púramente renderizada del lado del servidor, y lo única salida que tiene el JavaScript es hacer ciertos eventos que terminan cayendo en PHP. El PHP, HTML, CSS y JavaScript están en el mismo dominio. 
+
+Entonces acá la comunicación es Server-Side -> Client-Side -> Server-Side
+
+Server-Side Backend API - Frontend (React.js - Full client-side):
+1. El que inicia todo acá es React.js -> No hay sesión en absoluto, digamos que es simplemente un navegador "sin vida", solamente con estilos, y animaciones súper cools. 
+2. React.js se comunica con la API a través de Fetch API / Axios. Enviándole un token para autenticación.
+3. El servidor verifica que la petición haya sido enviada desde un dominio aceptado (CORS), que el token realmente sea válido y que el usuario que está utilizando la aplicación no haya sido habilitado. Si el servidor rechaza la solicitud, mediante HTTP le devuelve al cliente un método 401 por no estar autorizado y el frontend nos envía inmediatamente a una pantalla de login. Si el servidor acepta la solicitud mediante HTTP, le devuelve al cliente un estado HTTP según la acción realizada y el frontend hace algo.
+
+Entonces acá la comunicación es Frontend -> Server-Side Backend API -> Frontend -> ...
+
+¿Para qué hice esta distinción? Antes, React usaba el enfoque 2. Ahora, está utilizando un enfoque parecido al 1, y es por eso que se recomienda usar Next.js que es un framework que viene hace tiempo y que te permite hacer aplicaciones full-stack renderizadas por default desde un Server-Side ¡como hacía PHP!
+
+<Callout emoji="⚠️">
+Hay librerías como tRPC que te permiten potenciar el desarrollo full-stack con Next.js desde el server-side a client-side.
+</Callout>
+
+Hoy está creciendo nuevamente la tendencia de lenguajes tipados. Estos lenguajes ofrecen mayor seguridad y confiabilidad para los desarrolladores, lo que es crucial en un entorno donde las tecnologías cambian constantemente y la adaptabilidad es clave.
+
+Lenguajes como Haskell, C, Java, C++, C#, TypeScript, Go, son fuertemente tipados ¡y gracias a Dios que existen! 
+
+Esto pasa mucho en la industria, las tecnologías cambian constantemente y hay que estar preparados conceptualmente para poder adaptarse.
+
+## El por qué considero que todos deberíamos conocer y tener cierta experiencia en lenguajes tipados
+Lenguajes como JavaScript te permiten hacer lo que realmente quieras. Una variable puede tener un número, de repente ser un string, y de un golpe al otro un objeto, y JavaScript no te va a decir nada. En proyectos chiquitos, no va a ser un problema, pero también depende de la experiencia del desarrollador con el lenguaje.
+Conozco gente que ha programado desde hace 15 años en lenguajes que no son tipados y van joya pero ¿y los demás? ¿como hacés para darle seguridad a un desarrollador nuevo en este mundo? ¿cómo hace un desarrollador trainee-junior para agarrar cualquier lenguaje y tener la seguridad de lo que tienen las cosas en un código como más de 3210391203921039210 archivos y líneas de código? para mí, esta seguridad, y no cometer este tipo de errores de cambiar los tipos a las variables te lo da un lenguaje super estricto en tipado.
+
+Si te gustaría aprender JavaScript, empezá con TypeScript así ganás experiencia en dos cosas a la vez. 
+
+El comenzar con TypeScript te va a cambiar la forma de pensar, vas a decir "¿qué puedo hacerle a esta interfaz para reutilizarla con la otra?" "¿qué puedo hacer que estos dos objetos se ven parecidos?" "¿qué métodos puedo aplicarle a esta variable? igual no me los dice porque no tengo tipado :(". 
+
+Te va a ayudar a tener menos bugs, vas a aprender a refactorizar código de los demás sin cambiar su funcionamiento, vas a darte cuenta antes de los errores, vas a tirar código mucho más rapido a medida que vas ganando confianza y práctica ¡y también vas a poder entrar a proyectos colaborativos y entenderte con la gente sin necesidad de hablarte mucho! 
+
+Muchas personas conocidas en el ámbito de la tecnología también hacen hincapié en esto por temas de seguridad, testing y muchísimas cosas más que no puedo enumerar porque sería infinito el post.
+
+<StaticTweet id="1751605094309642753" />
+
+## Recomendaciones de mi parte
+Antes de empezar JavaScript y estar desesperados por conseguir un trabajo, quiero que sepan que TODOS están en lo mismo, TODOS están en la búsqueda de un trabajo, pero lamentablemente saber JavaScript no te va a dar un plus. El plus te lo va a dar tener un conocimiento técnico, amplio que te permita defenderte en las entrevistas técnicas o en el propio rol día a día.
+
+Para ganar fuerza en ciertos conceptos, cada lenguaje es una herramienta que te ayuda a poder obtener tus objetivos. Tratá de resolver problemas de la vida real con estos.
+
+1. Algoritmos y Estructuras de Datos -> C, o C++.
+2. Objetos -> Java o Ruby
+3. Desarrollo WEB (para entender bien server side - client side) -> PHP.
+4. Patrones de diseño -> Muy ligado al paradigma orientado a objetos -> Java.
+5. Bases de datos relacionales -> MySQL, SQLServer, PostgreSQL.
+6. Infraestructura -> Aprendete algo de Docker.
+7. Bases de datos no relacionales -> MongoDB por ejemplo.
+8. Manejo de servidores y muchás cosas más -> Linux.
+
+Entendé la diferencia entre una base de datos relacional, y una no relacional. 
+
+Cada lenguaje está orientado fuertemente a algo, aunque en la mayoría se puede hacer todo, pero hacete el favor y tocá un poquito de todo, y después especializate. Entendé bien las ventajas y las contras de cada uno, hoy en día se salta de lenguaje en lenguaje, y hay que adaptarse rápido a este tipo de cambios.
+
+Después de saber un poquito de conceptos más técnicos, andá pasandote al rubro que más quieras, pero dale tiempo. El mundo de tech es GIGANTE, y con el avance de la IA hay que saber más que tirar solamente líneas de código porque cada vez está mas díficil conseguir alguna oportunidad.
+
+Las recomendaciones que te dí son para ayudarte a despegar, pero una vez que entiendas eso podés acoplarte a cualquier otra tecnología.
+
+¿No queres usar PHP pero te gusta el server side? ¡Genial! por lo menos ahora podés distinguir bien que ventajas te da y podés buscar una alternativa.
+
+Así es el software, entendé los conceptos y después agarrá el que más te guste considerando el qué tenes que hacer y no planteando inicialmente el como lo vas a hacer.
+
+## Conclusión
+
+En este post hablé de demasidas cosas, el vicio de la gente con JavaScript, los conceptos que se pierden por no aprender lenguajes server-side, o cometer errores tontos y/o adquirir malas prácticas por comenzar a programar que no son tipados. 
+
+Aunque no lo crean, el empezar con JavaScript y obsesionarse con librerías como React llevó a muchas personas a descuidar la oportunidad de aprender otros lenguajes, como PHP, C, C++, C#, y a comprender conceptos fundamentales como el desarrollo del lado del servidor y las ventajas de los lenguajes con tipado estático.

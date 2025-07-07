@@ -4,6 +4,9 @@ import { notFound } from "next/navigation";
 import { formatDate } from "@/helpers/dates";
 import { CustomMDX } from "@/components/mdx";
 import { NEXT_PUBLIC_URL } from "@/config";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 export const dynamic = 'force-static';
 export const revalidate =  604800;
@@ -54,7 +57,7 @@ export default async function PostPage({params}) {
   }
 
   return (
-        <main className=" max-w-4xl mx-auto gap-4 py-24 px-6">
+        <main className=" max-w-4xl mx-auto gap-4 py-20 ">
          <script
         type="application/ld+json"
         suppressHydrationWarning
@@ -77,9 +80,16 @@ export default async function PostPage({params}) {
           }),
         }}
       />
-        <article className="prose prose-gray min-h-screen  ">
+       <Link href="/blog">
+          <Button variant="outline" className="ml-2  md:ml-0 mb-6 mt-16 border-purple-500/50 hover:bg-purple-500/20 bg-transparent hover:text-white">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Blog
+          </Button>
+        </Link>
+        <article className="prose prose-gray min-h-screen border-0 md:border bg-black/20 md:rounded-lg backdrop-blur-md border-purple-500/30 p-8">
+          
           <div className="space-y-2 not-prose">
-            <h1 className="text-4xl font-extrabold text-secondary-black dark:text-white tracking-tight lg:text-5xl lg:leading-[3.5rem]">
+            <h1 className="text-4xl">
               {post.metadata.title.toString()}
             </h1>
             <p className="text-gray-500 dark:text-gray-400">By Tomás Hernández, Posted on {formatDate(post.metadata.publishedAt)} </p>

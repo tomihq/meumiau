@@ -1,0 +1,64 @@
+---
+title: 'Node.js en Ubuntu'
+publishedAt: '2024-03-01'
+summary: 'Instalación de Node.js en Ubuntu'
+---
+
+<Callout emoji="⚠️">
+Este artículo está incompleto y puede contener errores.
+</Callout>
+
+## ¿Por qué es necesario este post? 
+En Ubuntu, son bastante reservados para instalar node. Es más, es posible que cuando trates de instalarlo haya dos opciones:
+1. node no es reconocido como paquete 
+2. podés instalar node pero se te instala una versión súper vieja
+
+## Instalando Node en Ubuntu
+Primero lo primero, necesitamos updatear los paquetes de Ubuntu
+```shell
+sudo apt-get update
+```
+
+Ahora, diríjanse a la web de node para ver cual es la versión LTS / estándar, o la que necesiten para poder trabajar en su proyecto.
+Normalmente, al iniciar un proyecto nuevo, se inicia con versión LTS (estable y estándar)
+
+Te dejo el enlace acá: [Node.js](https://nodejs.org/en)
+
+<Callout emoji="⚠️">
+Anote en algún lado la versión LTS/la que necesite. Lo necesitarás luego.
+</Callout>
+
+## Instalando CURL 
+Para poder descargar Node, necesitamos hacerlo a través de CURL. Porque el comando de apt-get siempre traerá una versión vieja de Node.
+```shell
+sudo apt install curl 
+```
+
+Ahora sí, podemos descargar la última versión de Node desde un repositorio
+```shell
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+```
+
+<Callout emoji="⚠️">
+Nótese que 18.x indica la versión de node a descargar. ¡Acá deberías usar la versión que necesites que te mencioné que guardaras!
+</Callout>
+
+Luego, nos dirá un mensaje como: 
+```
+Repository configured successfully. To install Node.js, run: apt-get install nodejs -y
+```
+
+Por lo tanto, ejecutamos: 
+```shell
+sudo apt-get install nodejs -y
+```
+
+Por último, para ver si todo salió bien:
+```shell
+sudo node -v
+```
+
+Se esperaría que se vea algo así (la versión puede variar):
+```shell
+v18.19.1
+```
