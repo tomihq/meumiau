@@ -1,0 +1,218 @@
+---
+title: 'Todo acerca de DNS (Domain Name System)'
+publishedAt: '2025-01-09'
+summary: '¿Qué es el DNS? ¿Para qué sirve? ¿Qué son los nameservers? ¿Cómo funcionan?'
+---
+
+## ¿Qué vas a aprender acá?
+Todo lo relacionado a DNS y Nameservers. Será largo pero muy informativo. 
+
+El post que sigue hará énfasis en lo práctico mientras que este se encarga de lo teórico.
+
+## Conceptos Importantes antes de empezar
+
+### TTL 
+El TTL (Time to Live) es un valor que indica el tiempo (en segundos) que un servidor DNS conserva un registro DNS antes de volver a solicitar información. Este registro conservado es una conversión del nombre del dominio de un sitio web a su dirección IP.
+Cuando el TTL expira, los dispositivos cliente solicitan los registros DNS más actualizados.
+
+Si se planea hacer cambios de DNS se recomienda colocar un TTL de 5 minutos (300 segundos). Una vez realizados los cambios lo recomendable es volver a colocar un TTL de 24 horas.
+
+<strong>Importante</strong>: Si no se especifica en un registro el valor del TTL, el valor estándar por defecto es de 240 minutos (14,400 segundos).
+
+### ISP 
+Llamamos ISP al proveedor de servicios de internet. 
+
+Sabiendo ambas definiciones podemos empezar.
+
+## ¿Qué es el DNS? 
+El sistema de nombres de dominio DNS  o Domain Name System en inglés es el directorio de Internet. 
+
+Es el encargado de traducir los nombres de dominio a direcciones IP para que los navegadores puedan cargar recursos de internet. 
+
+Esto es súper útil porque no es necesario que un usuario recuerde una dirección IP para acceder a un sitio web sino que simplemente necesita recordar el nombre de dominio.
+
+Si lo quieren ver como algo más sencillo (y no formalmente correcto), digamos que en conceptos de un diccionario la clave sería el nombre del dominio y el valor sería la dirección IP. Esto es un proceso mucho más complejo, pero a nivel cliente se puede ver de esa forma. 
+
+A continuación veremos quiénes son los involucrados en el proceso y cómo sucede.
+
+### Involucrados en el proceso
+1. Recursor de DNS (Recursive DNS Resolver): Es un servidor diseñado para recibir consultas desde equipos cliente mediante aplicaciones como navegadores web. Es el responsable de hacer solicitudes adicionales para satisfacer la consulta DNS del cliente. 
+2. Servidor de nombres raíz (Root Nameservers): Es el primer paso para traducir los nombres de dominio legibles en direcciones IP.
+3. Servidor de nombres TLD (TLD nameservers): Aloja la última parte de un nombre de servidor que se encuentra luego del último punto. 
+ej.: en hola.com, el servidor TLD es "com"
+4. Servidor de nombres autoritativo (Authoritative Nameservers): Se consulta la definición de un nombre específico y si cuenta con acceso al registro solicitado, devolverá la dirección IP asociada con el nombre de dominio.
+
+### Recursor de DNS (Recursive DNS Resolver)
+Actúa como intermediario entre el cliente y los servidores DNS:
+1. Solicita información al servidor raíz.
+2. Consulta al servidor TLD correspondiente.
+3. Contacta al servidor autoritativo para obtener la IP.
+
+Al recibir la IP como respuesta final, la devuelve al usuario y la almacena en caché durante el tiempo definido en TTL.
+
+<img src="/assets/web_client_request.png" alt="Proceso de recursor DNS" />
+
+La mayoría de los usuarios de internet utilizan un recursor de DNS proporcionado por su ISP. Sin embargo, también existen servicios de recursor de DNS públicos como Google Public DNS, OpenDNS, Cloudflare DNS, entre otros.
+
+#### Servidor de nombres raíz (Root Nameservers)
+La única responsabilidad es la de situarse en el Root y redirigirse al TLD que corresponda
+
+<img src='/assets/dns_root_server.png' alt='Root Nameservers'/>
+
+¿Cómo pasamos del Recursive DNS Resolver (paso 1) al Root Nameserver (paso 2)?
+
+Existen 13 direcciones de IP diferentes que contienen a los Root Nameservers y se repiten en diferentes servidores en el mundo. 
+
+¿Cómo sabe el ISP a qué servidor dirigirse? La respuesta se la ofrece el enrutamiento Anycast.
+
+##### Enrutamiento Anycast 
+Es un método de direccionamiento y enrutamiento de red indispensable para poder distribuir el tráfico (evitando congestiones), prevenir ataques DDOS y redirigir las solicitudes entrantes a una variedad de ubicaciones o nodos diferentes. 
+
+¿Cómo es que sucede que una misma IP está en varios servidores? Son servidores espejo, que tienen un contrato por cumplir: tener la misma información para la misma IP y mantenerse sincronizados.
+<img src='/assets/anycast.png' alt='Anycast'/>
+
+El funcionamiento de Anycast consiste en: recibir una IP y bajo un criterio dado (la latencia es uno) redirigirte hacia el servidor que mejor funcione en tu región.
+
+#### Servidor de nombres TLD (TLD nameservers)
+Una vez que el enrutamiento Anycast nos redirigió a un Root Nameserver, ahora es el turno de los servidores de nombres de dominio de nivel superior (TLD).
+
+Un TLD Nameserver contiene la información de todos los nombres de dominio que comparten una extensión de un dominio común, tal como .com, .net, o cualquiera que venga luego del último punto en una URL. 
+
+La gestión de estos TLD nameservers la realiza la Internet Assigned Numbers Authority (IANA)
+
+#### Servidor de nombres autoritativo (Authoritative Nameservers)
+Una vez que sabemos el TLD del dominio que solicita el cliente, ahora nos falta buscar el nombre de ese dominio. 
+
+Es interesante saber que puede haber dos posibles respuestas en este paso: 
+1. La dirección IP del dominio <a href="#registro-a-en-dns"> (registro A) </a>
+2. Un dominio alias <a href="#registro-cname-en-dns"> (registro CNAME) </a> que requiere una nueva consulta mediante el solucionador recursivo. 
+
+##### Registro A en DNS 
+La A viene de <b> Address </b> y es el registro más fundamental de los DNS porque asocia un dominio a una dirección IP. 
+
+El <a href="#registro-a-en-dns"> registro A </a> solo contiene direcciones IPv4. Si la web posee una dirección IPv6, se utiliza el registro AAAA.
+
+<table>
+    <thead>
+        <tr>
+            <th>Dominio</th>
+            <th>Tipo de Registro</th>
+            <th>Valor</th>
+            <th>TTL</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>tomihq.com</td>
+            <td>A</td>
+            <td>127.0.0.1</td>
+            <td>14400</td>
+        </tr>
+    </tbody>
+</table>
+
+El símbolo @ indica que este registro de DNS vale para la raíz del dominio. 
+
+En este ejemplo particular, @ indica que si alguien busca tomihq.com la respuesta del DNS sería 127.0.0.1.
+
+<strong> Podés simular este comportamiento en Windows escribiendo lo siguiente en el archivo hosts </strong>
+
+```shell
+... otra config
+127.0.0.1 tomihq.com #indica que si buscás mi blog te va a enviar al localhost
+```
+
+<strong> Importante</strong>: Se puede realizar una distribución de tráfico usando más de un registro DNS de tipo A. Una técnica conocida es el Round Robin Load Balancing.
+
+##### Registro CNAME en DNS
+El registro CNAME (Canonical Name) es un alias para los nombres de dominio que comparten una misma dirección IP. 
+
+El uso del registro CNAME viene cuando un dominio o subdominio (ej.: www.*) es un alias de otro dominio. 
+
+Ej.: www.tomihq.com es un subdominio CNAME de tomihq.com donde tomihq.com es un registro A (@) que apunta a una IP dada.
+
+Todos los registros CNAME deben apuntar a un registro A. No pueden apuntar a una dirección IP directamente. 
+
+<strong>Importante</strong>: Un registro CNAME apunta a la MISMA IP que el dominio raíz pero no necesariamente a la misma página. 
+
+#### Registro MX en DNS
+El registro MX de intercambios de emails (mail exchange) redirige un mensaje de correo electrónico a un servidor de correos.
+
+El registro MX indica como deben dirigirse estos mensajes de acuerdo al Simple Mail Transfer Protocol (SMTP, el protocolo estándar para los emails).
+
+<table>
+    <thead>
+        <tr>
+            <th>Dominio</th>
+            <th>Tipo de Registro</th>
+            <th>Prioridad</th>
+            <th>Valor</th>
+            <th>TTL</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>tomihq.com</td>
+            <td>MX</td>
+            <td>10</td>
+            <td>mailhost.tomihq.com</td>
+            <td>14400</td>
+        </tr>
+        <tr>
+            <td>tomihq.com</td>
+            <td>MX</td>
+            <td>20</td>
+            <td>mailhost2.tomihq.com</td>
+            <td>14400</td>
+        </tr>
+    </tbody>
+</table>
+
+
+En este caso estamos indicando que si alguien envía un correo electrónico a una casilla que gestione el dominio tomihq.com lo enviará a alguno de los dos servidores establecidos. 
+
+El servidor primario será aquel que tenga menor prioridad.
+
+Por ejemplo: si enviás un email a hola@tomihq.com pero el servidor mailhost.tomihq.com está caído o tiene mucho tráfico el email será enviado a través de mailhost2.tomihq.com.
+
+¿Como crear casillas de email para un dominio dado? Eso lo hacés directamente desde tu servidor de correos. 
+
+<strong> Los <a href="#registro-mx-en-dns"> registros MX </a> tienen que apuntar sí o sí a un <a href="#registro-ns-en-dns"> registro A </a> de servidor o un registro AAAA</strong>
+
+#### Registro NS en DNS
+El registro NS <a href="#nameserver"> (NameServer) </a> indica cuáles son los servidores de nombres autoritativos para un dominio. Es decir, quién controlará los DNS correspondientes a ese dominio. 
+
+Básicamente, los dominios NS indican a Internet dónde encontrar la IP de un dominio específico.
+
+Un dominio normalmente tiene múltiples registros NS donde se indica el servidor primario y secundario de nameservers para ese dominio. Si los nameservers no están configurados correctamente, los usuarios no podrán cargar un sitio web o una aplicación.
+
+<strong> Los registros NS nunca apuntan a un registro CNAME. </strong>
+<table>
+    <thead>
+        <tr>
+            <th>Dominio</th>
+            <th>Tipo de Registro</th>
+            <th>Valor</th>
+            <th>TTL</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>tomihq.com</td>
+            <td>NS</td>
+            <td>ns1.exampleserver.com</td>
+            <td>14400</td>
+        </tr>
+    </tbody>
+</table>
+
+## Nameserver
+Es un tipo de servidor DNS. Es el servidor que almacena todos los registros DNS para un dominio, incluyendo los registros A, CNAME, MX, y NS.
+
+Esto nos permite indicar qué proveedor gestionará los DNS de nuestro dominio.
+
+## DNS local en Windows & Linux 
+
+## Preguntas frecuentes acerca de DNS 
+1. ¿Cuánto tarda un cambio de DNS en propagarse? Puede tardar hasta 72hs. Depende del ISP, el registro del dominio, los valores de TTL, el tipo de registro y problemas de red. Para poder ver el estado de la propagación podés utilizar <a href="https://dnschecker.org/"> DNSChecker </a>
+2. ¿Qué es un error NXDOMAIN? NXDOMAIN es un acrónimo de "Non-Existent Domain" que indica que el dominio no existe o no se puede resolver en una IP válida. En Google Chrome el mensaje es "DNS_PROBE_FINISHED_NXDOMAIN". 

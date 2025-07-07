@@ -5,19 +5,8 @@ import Footer from "@/components/footer";
 import BackgroundPattern from "@/components/background-pattern";
 import TerminalWrapper from "@/components/terminal-wrapper";
 
-import { Roboto, Montserrat } from 'next/font/google'
+import { fontSans } from "@/assets/fonts";
 
-const roboto = Roboto({
-  weight: '400',
-  subsets: ['latin'],
-  variable: '--font-roboto',
-})
-
-const montserrat = Montserrat({
-  weight: '700',
-  subsets: ['latin'],
-  variable: '--font-montserrat',
-})
 
 export const metadata: Metadata = {
   title: "/tomihq/",
@@ -33,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={` ${roboto.variable} ${montserrat.variable} font-sans bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white relative`} >
+      <body className={` ${fontSans.className} font-sans bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white relative`} >
         <BackgroundPattern />
         <TerminalWrapper/>
            <Nav />

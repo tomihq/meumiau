@@ -376,4 +376,56 @@ export const COMMAND_DEFINITIONS: Record<string, CommandDefinition> = {
       }
     },
   },
+  matrix: {
+    description: "Simula un efecto Matrix en la terminal (visual)",
+    execute: () => {
+      const chars = 'abcdefghijklmnopqrstuvwxyz0123456789@#$%&';
+      const lines = [];
+      for (let i = 0; i < 16; i++) {
+        let line = '';
+        for (let j = 0; j < 48; j++) {
+          line += chars[Math.floor(Math.random() * chars.length)];
+        }
+        // Usar secuencia ANSI para color verde (si el frontend lo soporta)
+        lines.push(`\x1b[32m${line}\x1b[0m`);
+      }
+      lines.unshift('Efecto Matrix (simulado):');
+      lines.push('');
+      lines.push('¡Bienvenido a la Matrix!');
+      return lines;
+    },
+  },
+  theme: {
+    description: "Cambia el tema de la terminal ('hacker' o 'retro')",
+    execute: (arg, { variables, setVariables }) => {
+      const themes = ['hacker', 'retro', 'normal'];
+      const theme = arg.trim().toLowerCase();
+      if (!theme) {
+        return [
+          "Uso: theme <hacker|retro|normal>",
+          `Tema actual: ${variables.theme || 'normal'}`
+        ];
+      }
+      if (!themes.includes(theme)) {
+        return [
+          `Tema '${theme}' no soportado. Usa: hacker, retro o normal.`
+        ];
+      }
+      if (theme === 'normal') {
+        setVariables((prev) => {
+          const newVars = { ...prev };
+          delete newVars.theme;
+          return newVars;
+        });
+        return [
+          'Tema restaurado a normal (por defecto).'
+        ];
+      }
+      setVariables((prev) => ({ ...prev, theme }));
+      return [
+        `Tema cambiado a: ${theme}`,
+        theme === 'hacker' ? '¡Modo hacker activado! 🟩' : '¡Modo retro activado! 🟨'
+      ];
+    },
+  },
 };

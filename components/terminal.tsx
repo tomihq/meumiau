@@ -175,14 +175,73 @@ export default function Terminal({ currentSection, onNavigate = () => {} }: Term
     return `${user}@${host}:${path}$`
   }
 
+  // Determinar clases según el tema
+  type ThemeType = 'normal' | 'hacker' | 'retro';
+  const theme: ThemeType = (['hacker', 'retro'].includes(variables.theme) ? variables.theme : 'normal') as ThemeType;
+  // Paletas de colores por tema
+  const themeStyles = {
+    normal: {
+      bgCard: 'bg-slate-900/90',
+      border: 'border-purple-500/50',
+      header: 'bg-gray-800/50 border-b border-purple-500/30',
+      icon: 'text-purple-400',
+      prompt: 'text-blue-400',
+      cmd: 'text-purple-300',
+      output: 'text-gray-300',
+      input: 'text-purple-400 caret-purple-400 border-b border-purple-500/30',
+      inputBg: 'bg-slate-900/90',
+      inputHeader: 'bg-slate-900/90 border-t border-purple-500/20',
+      welcome: 'text-purple-400',
+      button: 'bg-slate-800/80 border border-purple-500/50 text-purple-400',
+      buttonHover: 'hover:bg-black/90',
+      btnHeader: 'hover:bg-gray-700/50',
+      iconBtn: 'text-gray-400',
+    },
+    hacker: {
+      bgCard: 'bg-black',
+      border: 'border-green-600',
+      header: 'bg-black border-b border-green-800',
+      icon: 'text-green-400',
+      prompt: 'text-green-300',
+      cmd: 'text-green-400',
+      output: 'text-green-200',
+      input: 'text-green-400 caret-green-400 border-b border-green-700 placeholder:text-green-400',
+      inputBg: 'bg-black',
+      inputHeader: 'bg-black border-t border-green-800',
+      welcome: 'text-green-400',
+      button: 'bg-black border border-green-700 text-green-400',
+      buttonHover: 'hover:bg-green-950',
+      btnHeader: 'hover:bg-green-950',
+      iconBtn: 'text-green-700',
+    },
+    retro: {
+      bgCard: 'bg-yellow-100',
+      border: 'border-yellow-700',
+      header: 'bg-yellow-200 border-b border-yellow-700',
+      icon: 'text-yellow-800',
+      prompt: 'text-orange-700',
+      cmd: 'text-yellow-900',
+      output: 'text-yellow-800',
+      input: 'text-yellow-900 caret-orange-700 border-b border-yellow-700',
+      inputBg: 'bg-yellow-100',
+      inputHeader: 'bg-yellow-200 border-t border-yellow-700',
+      welcome: 'text-orange-700',
+      button: 'bg-yellow-300 border border-yellow-700 text-yellow-900',
+      buttonHover: 'hover:bg-yellow-400',
+      btnHeader: 'hover:bg-yellow-300',
+      iconBtn: 'text-yellow-700',
+    },
+  };
+  const t = themeStyles[theme];
+
   if (!isOpen) {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 right-4 z-50 bg-slate-800/80 md:bg-transparent hover:bg-black/90 border border-purple-500/50 text-purple-400 font-mono"
+        className={`fixed bottom-4 right-4 z-50 ${t.button} md:bg-transparent hover:bg-black/90 border border-purple-500/50 text-purple-400 font-mono`}
         size="sm"
       >
-        <TerminalIcon className="w-4 h-4 mr-2" />
+        <TerminalIcon className={`w-4 h-4 mr-2 ${t.icon}`} />
         Terminal
       </Button>
     )
@@ -191,46 +250,46 @@ export default function Terminal({ currentSection, onNavigate = () => {} }: Term
   return (
     <div className="fixed inset-4 z-50 flex items-center justify-center pointer-events-none">
       <Card
-        className={`w-full max-w-4xl bg-slate-900/90 border-purple-500/50 font-mono text-sm pointer-events-auto transition-all duration-300  ${
+        className={`w-full max-w-4xl ${t.bgCard} ${t.border} font-mono text-sm pointer-events-auto transition-all duration-300  ${
           isMinimized ? "h-12" : "h-96"
         }`}
       >
         {/* Terminal Header */}
-        <div className="flex items-center justify-between px-4 py-2 bg-gray-800/50 border-b border-purple-500/30">
+        <div className={`flex items-center justify-between px-4 py-2 ${t.header}`}>
           <div className="flex items-center gap-2">
-            <TerminalIcon className="w-4 h-4 text-purple-400" />
-            <span className="text-purple-400">tomas@portfolio: ~</span>
+            <TerminalIcon className={`w-4 h-4 ${t.icon}`} />
+            <span className={`${t.icon}`}>tomas@portfolio: ~</span>
           </div>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsMinimized(!isMinimized)}
-              className="w-6 h-6 p-0 hover:bg-gray-700/50"
+              className={`w-6 h-6 p-0 ${t.btnHeader}`}
             >
               {isMinimized ? (
-                <Maximize2 className="w-3 h-3 text-gray-400" />
+                <Maximize2 className={`w-3 h-3 ${t.iconBtn}`} />
               ) : (
-                <Minimize2 className="w-3 h-3 text-gray-400" />
+                <Minimize2 className={`w-3 h-3 ${t.iconBtn}`} />
               )}
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsOpen(false)}
-              className="w-6 h-6 p-0 hover:bg-gray-700/50"
+              className={`w-6 h-6 p-0 ${t.btnHeader}`}
             >
-              <X className="w-3 h-3 text-gray-400" />
+              <X className={`w-3 h-3 ${t.iconBtn}`} />
             </Button>
           </div>
         </div>
 
         {!isMinimized && (
-          <CardContent className="p-0 h-full flex flex-col bg-slate-800/80">
+          <CardContent className={`p-0 h-full flex flex-col ${t.inputBg}`}>
             {/* Terminal Output */}
-            <div ref={terminalRef} className="flex-1 overflow-y-auto p-4 space-y-2 bg-slate-900/90">
+            <div ref={terminalRef} className={`flex-1 overflow-y-auto p-4 space-y-2 ${t.bgCard}`}>
               {history.length === 0 && (
-                <div className="text-purple-400">
+                <div className={`${t.welcome}`}>
                   <div>Welcome to Tomás Portfolio Terminal v1.0.0</div>
                   <div>Type 'help' for available commands.</div>
                   <div>Use Ctrl+` to toggle terminal.</div>
@@ -240,15 +299,19 @@ export default function Terminal({ currentSection, onNavigate = () => {} }: Term
 
               {history.map((entry, index) => (
                 <div key={index} className="space-y-1">
-                  <div className="text-purple-300">
-                    <span className="text-blue-400">{getPrompt()}</span> {entry.command}
+                  <div className={`${t.cmd}`}>
+                    <span className={`${t.prompt}`}>{getPrompt()}</span> {entry.command}
                   </div>
                  {(Array.isArray(entry.output) ? entry.output : [String(entry.output)]).map(
   (line, lineIndex) => (
     <div
       key={lineIndex}
       className={`pl-2 ${
-        line.includes("\x1b[31m") ? "text-red-400" : "text-gray-300"
+        line.includes("\x1b[31m")
+          ? "text-red-400"
+          : theme === 'hacker'
+            ? 'text-green-200'
+            : t.output
       }`}
       dangerouslySetInnerHTML={{
         __html: line
@@ -263,15 +326,15 @@ export default function Terminal({ currentSection, onNavigate = () => {} }: Term
             </div>
 
             {/* Terminal Input */}
-            <div className="flex items-center gap-2 px-4 py-3 bg-slate-900/90 border-t border-purple-500/20">
-              <span className="text-blue-400 flex-shrink-0">{getPrompt()}</span>
+            <div className={`flex items-center gap-2 px-4 py-3 ${t.inputHeader}`}>
+              <span className={`${t.prompt} flex-shrink-0`}>{getPrompt()}</span>
               <input
                 ref={inputRef}
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="flex-1 bg-transparent text-purple-400 outline-none caret-purple-400 border-b border-purple-500/30 pb-1 placeholder:text-gray-500 placeholder:opacity-60 pl-1"
+                className={`flex-1 bg-transparent ${t.input} outline-none pb-1 placeholder:opacity-60 pl-1`}
                 placeholder="Type a command..."
                 autoComplete="off"
                 spellCheck={false}
