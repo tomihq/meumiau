@@ -24,7 +24,8 @@ export type TokenType =
   | 'SYMBOL'          // (, ), [, ], ., ->
   | 'SEMICOLON'       // ;
   | 'WHITESPACE'      // Spaces, tabs
-  | 'EOF';            // End of input
+  | 'EOF'             // End of input
+  | 'UNKNOWN';        // Unrecognized character
 
 export interface Token {
   type: TokenType;
@@ -46,7 +47,9 @@ export type AstNode =
   | { type: 'IfStatement'; condition: string; thenBranch: AstNode; elseBranch?: AstNode }
   | { type: 'DoLoop'; collection: string; param: string; command: string }
   | { type: 'Unknown'; raw: string }
-  | { type: "Literal"; value: any };
+  | { type: "Literal"; value: any }
+  | { type: 'Map', collection: string, param: string, expr: AstNode }
+  | { type: 'Filter', collection: string, param: string, expr: AstNode };
 
 export interface CommandDefinition {
   description: string;

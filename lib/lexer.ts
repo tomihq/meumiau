@@ -266,7 +266,14 @@ export class Lexer {
         continue;
       }
 
-      throw new Error(`Unexpected character '${char}' at line ${this.line}`);
+      // En vez de lanzar error, agrego un token UNKNOWN y avanzo
+      this.tokens.push({
+        type: 'UNKNOWN',
+        value: this.advance(),
+        position: this.position - 1,
+        line: this.line
+      });
+      continue;
     }
 
     // Add EOF token
@@ -359,6 +366,24 @@ function parseStatement(context: ParserContext): AstNode {
     
     if (nextToken.type === 'SYMBOL' && nextToken.value === '.') {
       const thirdToken = context.tokens[context.current + 2];
+      if (thirdToken && thirdToken.type === 'KEYWORD' && thirdToken.value === 'do') {
+        return parseDoLoop(context);
+      }
+    }
+  }
+
+  // Check for map
+  if (check(context, 'IDENTIFIER') && peek(context).value.startsWith('$')) {
+    const varToken = peek(context);
+    const nextToken = peekNext(context);
+    if (nextToken.type === 'SYMBOL' && nextToken.value === '.') {
+      const thirdToken = context.tokens[context.current + 2];
+      if (thirdToken && thirdToken.type === 'IDENTIFIER' && thirdToken.value === 'map') {
+        return parseMap(context);
+      }
+      if (thirdToken && thirdToken.type === 'IDENTIFIER' && thirdToken.value === 'filter') {
+        return parseFilter(context);
+      }
       if (thirdToken && thirdToken.type === 'KEYWORD' && thirdToken.value === 'do') {
         return parseDoLoop(context);
       }
@@ -626,6 +651,76 @@ function parseDoLoop(context: ParserContext): AstNode {
     collection,
     param,
     command
+  };
+}
+
+function parseMap(context: ParserContext): AstNode {
+  const collectionToken = advance(context); // Consume collection variable
+  const collection = collectionToken.value.substring(1); // Remove '$'
+  advance(context); // Consume '.'
+  advance(context); // Consume 'map'
+  consume(context, 'SYMBOL', "Expected '(' after 'map'");
+  consume(context, 'SYMBOL', "Expected '(' for parameter");
+  const paramToken = advance(context); // Consume parameter
+  const param = paramToken.value;
+  consume(context, 'SYMBOL', "Expected ')' after parameter");
+  consume(context, 'SYMBOL', "Expected '->'");
+  // Parse expression
+  const exprTokens: Token[] = [];
+  let parenCount = 1;
+  while (!isAtEnd(context) && parenCount > 0) {
+    const token = peek(context);
+    if (token.type === 'SYMBOL') {
+      if (token.value === '(') parenCount++;
+      else if (token.value === ')') parenCount--;
+    }
+    if (parenCount > 0) {
+      exprTokens.push(advance(context));
+    }
+  }
+  consume(context, 'SYMBOL', "Expected ')' after map expression");
+  const exprContext = createParserContext(exprTokens);
+  const exprNode = parseExpression(exprContext);
+  return {
+    type: 'Map',
+    collection,
+    param,
+    expr: exprNode
+  };
+}
+
+function parseFilter(context: ParserContext): AstNode {
+  const collectionToken = advance(context); // Consume collection variable
+  const collection = collectionToken.value.substring(1); // Remove '$'
+  advance(context); // Consume '.'
+  advance(context); // Consume 'filter'
+  consume(context, 'SYMBOL', "Expected '(' after 'filter'");
+  consume(context, 'SYMBOL', "Expected '(' for parameter");
+  const paramToken = advance(context); // Consume parameter
+  const param = paramToken.value;
+  consume(context, 'SYMBOL', "Expected ')' after parameter");
+  consume(context, 'SYMBOL', "Expected '->'");
+  // Parse expression
+  const exprTokens: Token[] = [];
+  let parenCount = 1;
+  while (!isAtEnd(context) && parenCount > 0) {
+    const token = peek(context);
+    if (token.type === 'SYMBOL') {
+      if (token.value === '(') parenCount++;
+      else if (token.value === ')') parenCount--;
+    }
+    if (parenCount > 0) {
+      exprTokens.push(advance(context));
+    }
+  }
+  consume(context, 'SYMBOL', "Expected ')' after filter expression");
+  const exprContext = createParserContext(exprTokens);
+  const exprNode = parseExpression(exprContext);
+  return {
+    type: 'Filter',
+    collection,
+    param,
+    expr: exprNode
   };
 }
 

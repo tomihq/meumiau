@@ -399,6 +399,25 @@ function executeCommandFromTokens(
   }
 }
 
+// Función auxiliar para evaluar recursivamente hasta obtener un valor primitivo
+function evaluateToPrimitive(arg: any, context: any): any {
+  // Si es un nodo AST
+  if (arg && typeof arg === 'object' && arg.type) {
+    const result = interpretAstNode(arg, context);
+    if (Array.isArray(result)) {
+      if (result.length === 1) {
+        return evaluateToPrimitive(result[0], context);
+      } else {
+        return result.map(r => evaluateToPrimitive(r, context)).join('\n');
+      }
+    } else {
+      return evaluateToPrimitive(result, context);
+    }
+  }
+  // Si es string, número, booleano, devolver tal cual
+  return arg;
+}
+
 // Main interpreter function - refactored for scalability
 export const interpretAstNode = (
   node: AstNode,
@@ -461,8 +480,13 @@ export const interpretAstNode = (
         let parsedValue: any;
         try {
           if (valueNode.type === 'Literal') {
-            // Handle variable references in literals
-            if (typeof valueNode.value === 'string' && valueNode.value.startsWith('$')) {
+            if (Array.isArray(valueNode.value)) {
+              // Evaluar cada elemento del array recursivamente
+              parsedValue = valueNode.value.map((el: any) => {
+                if (el.type === 'Literal') return el.value;
+                return interpretAstNode(el, context)[0];
+              });
+            } else if (typeof valueNode.value === 'string' && valueNode.value.startsWith('$')) {
               const refVarName = valueNode.value.substring(1);
               if (!(refVarName in variables)) {
                 output.push(`Error: Variable '$${refVarName}' does not exist`);
@@ -606,25 +630,15 @@ export const interpretAstNode = (
             }
           );
 
-          output.push(
-            `  [${i}] - Element: ${
-              typeof element === "string"
-                ? `'${element}'`
-                : Array.isArray(element)
-                ? `[${element
-                    .map((v) => (typeof v === "string" ? `'${v}'` : v))
-                    .join(", ")}]`
-                : String(element)
-            }`
-          );
-          output.push(`    Simulating: ${processedCommand}`);
-
-          const subOutput = executeSimulatedSubCommand(
-            processedCommand,
-            simulatedContext
-          );
-          subOutput.forEach((line) => output.push(`      ${line}`));
-          output.push("");
+          // Eliminar mensajes de elemento y Simulating
+          try {
+            const { parseCommandToAstNode } = require("./lexer");
+            const ast = parseCommandToAstNode(processedCommand);
+            const subOutput = interpretAstNode(ast, context);
+            subOutput.forEach((line) => output.push(line));
+          } catch (err) {
+            output.push(`Error ejecutando comando: ${err}`);
+          }
         }
         output.push("--- End Iteration ---");
         break;
@@ -632,7 +646,10 @@ export const interpretAstNode = (
       case "Command":
         const commandDef = COMMAND_DEFINITIONS[node.name];
         if (commandDef) {
-          const commandOutput = commandDef.execute(node.args, {
+          let commandArgs: any = node.args;
+          // Evaluar recursivamente hasta obtener un valor primitivo
+          commandArgs = evaluateToPrimitive(commandArgs, context);
+          const commandOutput = commandDef.execute(commandArgs, {
             currentSection,
             router,
             variables,
@@ -659,6 +676,64 @@ export const interpretAstNode = (
         );
         break;
         
+      case "Map": {
+        const collectionName = node.collection;
+        const paramName = node.param;
+        const exprNode = node.expr;
+        if (!(collectionName in variables)) {
+          output.push(`Error: Variable '$${collectionName}' does not exist.`);
+          break;
+        }
+        const collection = variables[collectionName];
+        if (!Array.isArray(collection)) {
+          output.push(`Error: Variable '$${collectionName}' is not a collection (array).`);
+          break;
+        }
+        const result = collection.map((element: any) => {
+          // Creamos un contexto temporal con la variable del parámetro
+          const tempVars = { ...variables, [paramName]: element };
+          // Evaluamos la expresión con el parámetro
+          let val = evaluateToPrimitive(exprNode, { ...context, variables: tempVars });
+          // Si es string y contiene el nombre del parámetro, reemplazar y evaluar aritmética
+          if (typeof val === 'string' && val.includes(paramName)) {
+            // Reemplazar todas las ocurrencias del parámetro por el valor
+            let expr = val.replace(new RegExp(`\\b${paramName}\\b`, 'g'), element);
+            // Evaluar aritmética
+            const arith = evaluateArithmetic(expr);
+            if (!arith.error) return arith.value;
+            // Si no es aritmética, devolver el string reemplazado
+            return expr;
+          }
+          return val;
+        });
+        return [JSON.stringify(result)];
+      }
+      case "Filter": {
+        const collectionName = node.collection;
+        const paramName = node.param;
+        const exprNode = node.expr;
+        if (!(collectionName in variables)) {
+          output.push(`Error: Variable '$${collectionName}' does not exist.`);
+          break;
+        }
+        const collection = variables[collectionName];
+        if (!Array.isArray(collection)) {
+          output.push(`Error: Variable '$${collectionName}' is not a collection (array).`);
+          break;
+        }
+        const result = collection.filter((element: any) => {
+          const tempVars = { ...variables, [paramName]: element };
+          let val = evaluateToPrimitive(exprNode, { ...context, variables: tempVars });
+          if (typeof val === 'string' && val.includes(paramName)) {
+            let expr = val.replace(new RegExp(`\\b${paramName}\\b`, 'g'), element);
+            const arith = evaluateArithmetic(expr);
+            if (!arith.error) return !!arith.value;
+            return !!expr;
+          }
+          return !!val;
+        });
+        return [JSON.stringify(result)];
+      }
       default:
         output.push(`Unexpected command type: ${(node as any).type}`);
         break;
