@@ -77,7 +77,7 @@ export default async function PostPage({params}) {
           }),
         }}
       />
-        <article className="prose prose-gray  dark:prose-invert min-h-screen  ">
+        <article className="prose prose-gray min-h-screen  ">
           <div className="space-y-2 not-prose">
             <h1 className="text-4xl font-extrabold text-secondary-black dark:text-white tracking-tight lg:text-5xl lg:leading-[3.5rem]">
               {post.metadata.title.toString()}
