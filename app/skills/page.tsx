@@ -43,7 +43,6 @@ export default function SkillsPage() {
                 <div className="text-2xl">⚙️</div>
                 <h2 className="text-xl font-semibold text-purple-300">Backend Development</h2>
               </div>
-              <p className="text-gray-300 mb-3">Primarily with OOP principles</p>
               <div className="flex flex-wrap gap-3">
                 <Badge
                   variant="secondary"
@@ -71,7 +70,14 @@ export default function SkillsPage() {
                   className="bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 transition-colors"
                 >
                   <span className="mr-2">⚡</span>
-                  C++, Rust, Java
+                  C++
+                </Badge>
+                <Badge
+                  variant="secondary"
+                  className="bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 transition-colors"
+                >
+                  <span className="mr-2">☕</span>
+                  Java
                 </Badge>
                 <Badge
                   variant="secondary"

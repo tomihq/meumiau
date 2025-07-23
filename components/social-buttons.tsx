@@ -2,34 +2,21 @@
 
 import type React from "react"
 
-import { Twitter, Github, Youtube, Twitch,Mail,  } from "lucide-react"
+import {  Github, Linkedin, Mail,  } from "lucide-react"
 import Link from "next/link"
 
 const SOCIAL_LINKS = [
   {
-    name: "Twitter",
-    href: "https://twitter.com/tomihq_",
-    icon: Twitter,
-    color: "hover:bg-blue-500/20 hover:text-blue-400",
+    name: "LinkedIn",
+    href: "https://linkedin.com/in/tomihq",
+    icon: Linkedin,
+    color: "hover:bg-blue-500/20 hover:text-gray-300",
   },
-  
   {
     name: "GitHub",
     href: "https://github.com/tomihq",
     icon: Github,
     color: "hover:bg-gray-500/20 hover:text-gray-300",
-  },
-  {
-    name: "YouTube",
-    href: "https://youtube.com/@tomihq",
-    icon: Youtube,
-    color: "hover:bg-red-500/20 hover:text-red-400",
-  },
-  {
-    name: "Twitch",
-    href: "https://twitch.tv/ttomihq",
-    icon: Twitch,
-    color: "hover:bg-purple-600/20 hover:text-purple-400",
   },
   {
     name: "Email",
@@ -43,7 +30,6 @@ const SocialButtons: React.FC = () => {
 
   return (
     <div className="flex items-center gap-1 md:gap-2">
-      {/* Social Media Links */}
       {SOCIAL_LINKS.map((social) => {
         const IconComponent = social.icon
         return (

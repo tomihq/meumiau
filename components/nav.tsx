@@ -2,8 +2,6 @@
 import { Code } from 'lucide-react';
 import React from 'react';
 import NavLinks from './nav-links';
-import SocialButtons from './social-buttons';
-import MusicPlayer from './music-player';
 
 const Nav = () => {
   return (
@@ -17,10 +15,9 @@ const Nav = () => {
           <span className="font-mono text-purple-300 text-sm hidden md:inline">{"~/tomas"}</span>
         </div>
         <NavLinks />
-        <SocialButtons/>
+        {/* <SocialButtons/> */}
       </div>
     </nav>
-        <MusicPlayer />
 
     </div>
 

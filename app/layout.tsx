@@ -25,7 +25,7 @@ export default function RootLayout({
       <body className={` ${fontSans.className} font-sans bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white relative`} >
         <BackgroundPattern />
         <TerminalWrapper/>
-           <Nav />
+        <Nav />
         {children}
         <Footer />
       </body>

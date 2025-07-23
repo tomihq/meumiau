@@ -8,9 +8,9 @@ const SECTIONS = {
   home: { path: "/", description: "Home page - About Tomás" },
   skills: { path: "/skills", description: "Technical skills and technologies" },
   projects: { path: "/projects", description: "Current and featured projects" },
-  notes: { path: "/notes", description: "Mathematical notes and thoughts" },
-  blog: { path: "/blog", description: "Latest blog posts and articles" },
-  contact: { path: "/contact", description: "Contact information and links" },
+  /* notes: { path: "/notes", description: "Mathematical notes and thoughts" }, */
+  /* blog: { path: "/blog", description: "Latest blog posts and articles" }, */
+/*   contact: { path: "/contact", description: "Contact information and links" }, */
 };
 
 const NavLinks: React.FC = () => {
@@ -40,8 +40,6 @@ const NavLinks: React.FC = () => {
   };
 
   return (
-    // This div was previously inside the Nav component.
-    // It now wraps the dynamically styled links.
     <div className="flex items-center gap-3 md:gap-6 min-w-max">
       <Link href="/" className={getLinkClasses("/")}>
         home
@@ -52,15 +50,15 @@ const NavLinks: React.FC = () => {
       <Link href="/projects" className={getLinkClasses("/projects")}>
         projects
       </Link>
-      <Link href="/notes" className={getLinkClasses("/notes")}>
+     {/*  <Link href="/notes" className={getLinkClasses("/notes")}>
         notes
       </Link>
       <Link href="/blog" className={getLinkClasses("/blog")}>
         blog
-      </Link>
-      <Link href="/contact" className={getLinkClasses("/contact")}>
+      </Link> */}
+      {/* <Link href="/contact" className={getLinkClasses("/contact")}>
         contact
-      </Link>
+      </Link> */}
     </div>
   );
 };

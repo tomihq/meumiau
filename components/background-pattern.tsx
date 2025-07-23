@@ -64,14 +64,14 @@ const BackgroundPattern = () => {
   >([])
 
   useEffect(() => {
-    const newParticles = Array.from({ length: 60 }, (_, i) => ({
+    const newParticles = Array.from({ length: 30 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
       y: Math.random() * 100,
       symbol: symbols[Math.floor(Math.random() * symbols.length)],
       delay: Math.random() * 8,
       duration: 4 + Math.random() * 4,
-      size: 0.8 + Math.random() * 1.3,
+      size: 0.8 + Math.random() * 1,
     }))
     setParticles(newParticles)
   }, [])

@@ -24,8 +24,8 @@ const SECTIONS: Record<string, SectionInfo> = {
   home: { path: "/", description: "Home page - About Tomás" },
   skills: { path: "/skills", description: "Technical skills and technologies" },
   projects: { path: "/projects", description: "Current and featured projects" },
-  notes: { path: "/notes", description: "Mathematical notes and thoughts" },
-  blog: { path: "/blog", description: "Latest blog posts and articles" },
+ /*  notes: { path: "/notes", description: "Mathematical notes and thoughts" },
+  blog: { path: "/blog", description: "Latest blog posts and articles" }, */
   contact: { path: "/contact", description: "Contact information and links" },
 }
 
