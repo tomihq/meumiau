@@ -23,7 +23,7 @@ const languages = [
     code: "en",
     name: "English",
     flag: "🇺🇸",
-    file: "/assets/hernandez-tomas-eng-version.pdf",
+    file: "/assets/cv/hernandez-tomas-eng-version.pdf",
   }
 ]
 
