@@ -7,6 +7,7 @@ import TerminalWrapper from "@/components/terminal-wrapper";
 
 import { fontSans } from "@/assets/fonts";
 import Script from "next/script";
+import Head from "next/head";
 
 
 export const metadata: Metadata = {
@@ -23,6 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <Head>
       <Script
           strategy="afterInteractive"
         dangerouslySetInnerHTML={{
@@ -38,6 +40,7 @@ export default function RootLayout({
         }}
       
       />
+      </Head>
       <body className={` ${fontSans.className} font-sans bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white relative`} >
         <BackgroundPattern />
         <TerminalWrapper/>
