@@ -17,13 +17,13 @@ const languages = [
     code: "es",
     name: "Español",
     flag: "🇪🇸",
-    file: "/content/jane-doe-cv-es.pdf",
+    file: "/assets/cv/hernandez-tomas-es-version.pdf",
   },
   {
     code: "en",
     name: "English",
     flag: "🇺🇸",
-    file: "/content/jane-doe-cv-en.pdf",
+    file: "/assets/hernandez-tomas-eng-version.pdf",
   }
 ]
 
