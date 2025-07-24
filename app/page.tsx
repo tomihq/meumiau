@@ -47,8 +47,8 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <div className="flex flex-col items-center justify-center gap-2">
-           <div className="flex flex-row items-center justify-center gap-4 my-8">
+          <div className="flex flex-col items-center justify-center">
+           <div className="flex flex-row items-center justify-center w-full gap-6 my-6">
            <SocialButtons/>
            </div>
            <CVDownloadModal/>
