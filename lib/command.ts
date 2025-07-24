@@ -192,9 +192,9 @@ export const COMMAND_DEFINITIONS: Record<string, CommandDefinition> = {
         home: { path: "/", description: "Home page - About Tomás" },
         skills: { path: "/skills", description: "Technical skills and technologies" },
         projects: { path: "/projects", description: "Current and featured projects" },
-        notes: { path: "/notes", description: "Mathematical notes and thoughts" },
-        blog: { path: "/blog", description: "Latest blog posts and articles" },
-        contact: { path: "/contact", description: "Contact information and links" },
+        //notes: { path: "/notes", description: "Mathematical notes and thoughts" },
+        //blog: { path: "/blog", description: "Latest blog posts and articles" },
+        //contact: { path: "/contact", description: "Contact information and links" },
       };
       return [
         "Available sections:",
@@ -213,9 +213,9 @@ export const COMMAND_DEFINITIONS: Record<string, CommandDefinition> = {
         home: { path: "/", description: "Home page - About Tomás" },
         skills: { path: "/skills", description: "Technical skills and technologies" },
         projects: { path: "/projects", description: "Current and featured projects" },
-        notes: { path: "/notes", description: "Mathematical notes and thoughts" },
-        blog: { path: "/blog", description: "Latest blog posts and articles" },
-        contact: { path: "/contact", description: "Contact information and links" },
+        //notes: { path: "/notes", description: "Mathematical notes and thoughts" },
+        //blog: { path: "/blog", description: "Latest blog posts and articles" },
+        //contact: { path: "/contact", description: "Contact information and links" },
       };
 
       if (!arg) {
@@ -238,9 +238,9 @@ export const COMMAND_DEFINITIONS: Record<string, CommandDefinition> = {
         home: { path: "/", description: "Home page - About Tomás" },
         skills: { path: "/skills", description: "Technical skills and technologies" },
         projects: { path: "/projects", description: "Current and featured projects" },
-        notes: { path: "/notes", description: "Mathematical notes and thoughts" },
-        blog: { path: "/blog", description: "Latest blog posts and articles" },
-        contact: { path: "/contact", description: "Contact information and links" },
+        //notes: { path: "/notes", description: "Mathematical notes and thoughts" },
+        //blog: { path: "/blog", description: "Latest blog posts and articles" },
+        //contact: { path: "/contact", description: "Contact information and links" },
       };
       return [SECTIONS[currentSection as keyof typeof SECTIONS]?.path || "/"];
     },
@@ -277,9 +277,9 @@ export const COMMAND_DEFINITIONS: Record<string, CommandDefinition> = {
         home: { path: "/", description: "Home page - About Tomás" },
         skills: { path: "/skills", description: "Technical skills and technologies" },
         projects: { path: "/projects", description: "Current and featured projects" },
-        notes: { path: "/notes", description: "Mathematical notes and thoughts" },
-        blog: { path: "/blog", description: "Latest blog posts and articles" },
-        contact: { path: "/contact", description: "Contact information and links" },
+        //notes: { path: "/notes", description: "Mathematical notes and thoughts" },
+        //blog: { path: "/blog", description: "Latest blog posts and articles" },
+        //contact: { path: "/contact", description: "Contact information and links" },
       };
 
       if (!arg) {
