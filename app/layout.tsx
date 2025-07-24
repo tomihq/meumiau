@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
+
 import "./globals.css";
 import Nav from "@/components/nav";
-import Footer from "@/components/footer";
 import BackgroundPattern from "@/components/background-pattern";
-import TerminalWrapper from "@/components/terminal-wrapper";
-
 import { fontSans } from "@/assets/fonts";
 import Script from "next/script";
 import Head from "next/head";
-
+import TerminalWrapper from "@/components/terminal-wrapper";
+import Footer from "@/components/footer";
 
 export const metadata: Metadata = {
   title: "/tomihq/",
@@ -25,10 +24,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <Head>
-      <Script
+        <Script
           strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
+          dangerouslySetInnerHTML={{
+            __html: `
             <script type="text/javascript">
     (function(c,l,a,r,i,t,y){
         c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
@@ -37,15 +36,17 @@ export default function RootLayout({
     })(window, document, "clarity", "script", "sk0qx9lnt6");
 </script>
           `,
-        }}
-      
-      />
+          }}
+        />
       </Head>
-      <body className={` ${fontSans.className} font-sans bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white relative`} >
-        <BackgroundPattern />
-        <TerminalWrapper/>
+      <body
+        className={` ${fontSans.className} font-sans bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white relative`}
+      >
         <Nav />
         {children}
+        <TerminalWrapper />
+        <BackgroundPattern />
+
         <Footer />
       </body>
     </html>
