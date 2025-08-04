@@ -9,7 +9,7 @@ const SECTIONS = {
   skills: { path: "/skills", description: "Technical skills and technologies" },
   projects: { path: "/projects", description: "Current and featured projects" },
   /* notes: { path: "/notes", description: "Mathematical notes and thoughts" }, */
-  /* blog: { path: "/blog", description: "Latest blog posts and articles" }, */
+   blog: { path: "/blog", description: "Latest blog posts and articles" }, 
 /*   contact: { path: "/contact", description: "Contact information and links" }, */
 };
 
@@ -52,10 +52,10 @@ const NavLinks: React.FC = () => {
       </Link>
      {/*  <Link href="/notes" className={getLinkClasses("/notes")}>
         notes
-      </Link>
+      </Link>*/}
       <Link href="/blog" className={getLinkClasses("/blog")}>
         blog
-      </Link> */}
+      </Link> 
       {/* <Link href="/contact" className={getLinkClasses("/contact")}>
         contact
       </Link> */}

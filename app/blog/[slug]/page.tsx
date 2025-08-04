@@ -4,9 +4,6 @@ import { notFound } from "next/navigation";
 import { formatDate } from "@/helpers/dates";
 import { CustomMDX } from "@/components/mdx";
 import { NEXT_PUBLIC_URL } from "@/config";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 
 export const dynamic = 'force-static';
 export const revalidate =  604800;
@@ -14,7 +11,8 @@ export const revalidate =  604800;
 export async function generateMetadata({
   params,
 }): Promise<Metadata | undefined> {
-  let post = getBlogPosts().find((post) => post.slug === params.slug);
+  const paramsSure = await params;
+  let post = getBlogPosts().find((post) => post.slug === paramsSure.slug);
   if (!post) {
     return;
   }
@@ -26,6 +24,9 @@ export async function generateMetadata({
     image,
   } = post.metadata;
 
+  let ogImage = image
+  ? `${NEXT_PUBLIC_URL}${image}`
+  : `${NEXT_PUBLIC_URL}og?title=${title}`;
 
   return {
     title: `${title}`,
@@ -39,25 +40,32 @@ export async function generateMetadata({
       type: 'article',
       publishedTime,
       url: `${NEXT_PUBLIC_URL}blog/${post.slug}`,
+      images: [
+        {
+          url: ogImage
+        }
+      ]
       
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
+      images: [ogImage],
     },
   };
 }
 
 
 export default async function PostPage({params}) {
-  let post = getBlogPosts().find((post) => post.slug === params.slug);
+  const paramsSure = await params;
+  let post = getBlogPosts().find((post) => post.slug === paramsSure.slug);
   if (!post) {
     notFound();
   }
 
   return (
-        <main className=" max-w-4xl mx-auto gap-4 py-20 ">
+        <main className=" max-w-4xl mx-auto gap-4">
          <script
         type="application/ld+json"
         suppressHydrationWarning
@@ -80,15 +88,11 @@ export default async function PostPage({params}) {
           }),
         }}
       />
-       <Link href="/blog">
-          <Button variant="outline" className="ml-2  md:ml-0 mb-6 mt-16 border-purple-500/50 hover:bg-purple-500/20 bg-transparent hover:text-white">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Blog
-          </Button>
-        </Link>
-        <article className="prose prose-gray min-h-screen border-0 md:border bg-black/20 md:rounded-lg backdrop-blur-md border-purple-500/30 p-8">
+      
+        <article className="prose prose-gray min-h-screen border-0  bg-black/20  backdrop-blur-md border-purple-500/30  p-8 py-20">
           
-          <div className="space-y-2 not-prose">
+          <div className="max-w-prose mx-auto">
+          <div className="space-y-2 not-prose ">
             <h1 className="text-4xl">
               {post.metadata.title.toString()}
             </h1>
@@ -96,6 +100,7 @@ export default async function PostPage({params}) {
           </div>
         
          <CustomMDX source={post.content} />
+          </div>
         </article>
        
       </main> 

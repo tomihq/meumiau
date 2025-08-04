@@ -32,8 +32,8 @@ Aunque el pooling es una solución para problemas de rendimiento en general, el 
 
 A diferencia de un VPS que está siempre encendido, una función serverless tiene un ciclo de vida:
 
-1. **Cold Start** (Arranque en frío): Cuando la función se invoca por primera vez (o después de un tiempo de actividad, normalmente 5-15 minutos), el cloud provider necesita **crear un nuevo contenedor** para ejecutar el código. Este proceso es lento, ya que implica cargar todo, inicializar el runtime, etc.
-2. **Warm Start** (Arranque en caliente): Si una segunda invocación llega poco después de la primera (sin haber pasado 5-15 minutos), el cloud provider **reutiliza el contenedor** que ya está listo. Esto es mucho más rápido porque el entorno ya está inicializado.
+1. **Cold Start**: Cuando la función se invoca por primera vez (o después de un tiempo de actividad, normalmente 5-15 minutos), el cloud provider necesita **crear un nuevo contenedor** para ejecutar el código. Este proceso es lento, ya que implica cargar todo, inicializar el runtime, etc.
+2. **Warm Start**: Si una segunda invocación llega poco después de la primera (< 5-15 minutos), el cloud provider **reutiliza el contenedor** que ya está listo. Esto es mucho más rápido porque el entorno ya está inicializado.
 
 ### ¿Para qué quiero Pooling entonces en Serverless?
 
@@ -47,15 +47,15 @@ Por ejemplo, el free tier de MongoDB  acepta 100 conexiones simultáneas. Si ten
 
 **Para MongoDB:**
 
-- `MongoServerSelectionError: "server selection error: connect ECONNREFUSED"` (La base de datos rechaza la conexión porque está saturada).
-- `"Topology was not created"` (Un error genérico que a menudo indica problemas de conectividad o de saturación del pool de conexiones).
-- `"MongoError: pool is exhausted"` (El pool de conexiones no tiene más conexiones disponibles).
+- MongoServerSelectionError: "server selection error: connect ECONNREFUSED"
+- Topology was not created"
+- MongoError: pool is exhausted"
 
 **Para Redis:**
 
-- `"Error: Max number of clients reached"` (Redis ha alcanzado su límite máximo de clientes conectados).
-- `"OOM command not allowed when used memory > 'maxmemory'"` (Redis se queda sin memoria, a menudo exacerbado por un número excesivo de clientes y operaciones simultáneas).
-- `"RedisError: Connection timeout"` (El cliente no puede establecer una conexión dentro del tiempo de espera permitido).
+- Error: Max number of clients reached
+- OOM command not allowed when used memory > 'maxmemory'
+- RedisError: Connection timeout
 
 ### ¿Cuál es la solución?
 
@@ -63,7 +63,7 @@ En entornos serverless, o en cualquier otro entorno la solución es hacer una in
 
 A continuación dejo un ejemplo con Moongose.
 
-```tsx
+```typescript
 import mongoose from 'mongoose';
 
 const MONGO_URL = YOUR_MONGO_URL;
@@ -101,7 +101,10 @@ mongoClient();
 
 ## ¿Por qué antes no era tan común este problema?
 
-Este problema **no suele ocurrir con el modelo tradicional de VPS**, ya que en ese caso se levanta una única instancia del backend para gestionar todas las peticiones. Todos los clientes que se conectan a ese backend comparten el mismo pool de conexiones a la base de datos, lo que evita la saturación.
+Este problema **no suele ocurrir con el modelo tradicional de VPS**, ya que en ese caso se levanta una única instancia del backend para gestionar todas las peticiones. 
+
+Todos los clientes que se conectan a ese backend comparten el mismo pool de conexiones a la base de datos, lo que evita la saturación.
+
 
 ## En general, ¿es malo tener más de un pool?
 
