@@ -1,0 +1,113 @@
+---
+title: 'Gestión de Conexiones en Serverless: El Pooling y el Patrón Singleton'
+publishedAt: '2025-08-04'
+summary: '¿Tu aplicación serverless satura tu base de datos y no sabes por qué? Este post te explica el problema del Cold Start y la creación excesiva de conexiones en entornos como AWS Lambda. Descubre cómo una correcta implementación del pooling y el patrón singleton es la solución definitiva para optimizar el rendimiento y evitar que tu base de datos colapse.'
+---
+## Motivación
+
+Hagamos de cuenta que tenés una empresa de transporte. Cada vez que un cliente te pide un viaje, tenés dos opciones:
+
+1. **Opción costosa:** Comprás un auto nuevo, lo usás para el viaje y, al terminar lo destruís.
+2. **Opción eficiente (Pooling):** Tenés un conjunto de autos preexistentes y listos. Cuando un cliente pide un viaje, le asignás uno de esos autos. Cuando termina el viaje, guardás el auto de vuelta, listo para el siguiente cliente.
+
+En el mundo del desarrollo, una **conexión a una base de datos** es como ese auto.
+
+## ¿Qué es el Pooling?
+
+**Crear una conexión nueva** es un proceso costoso en términos de tiempo y recursos del sistema (CPU, memoria). Implica un “handshake” de red, autenticación, y configuración de la sesión.
+
+El **Pooling** es un patrón de diseño *(Object Pool Pattern)* donde tu backend mantiene un conjunto (pool) de conexiones de base de datos que ya están abiertas y listas para ser usadas.
+
+## ¿Por qué es necesario?
+
+1. **Rendimiento**: Reutilizar una conexión que ya existe es mucho más rápido que crear una nueva. Esto reduce la latencia y hace que la aplicación responda más rápido.
+2. **Gestión de Recursos:** Las bases de datos tienen un límite de cantidad de conexiones concurrentes que pueden manejar. Un pool de conexiones actúa como un guardián, controlando el número de conexiones activas y evitando que el servidor de la base de datos se sature y falle.
+3. **Eficiencia:** Se evita la sobrecarga de crear y destruir conexiones todo el tiempo, liberando recursos del servidor del backend.
+
+TLDR: El pooling es una técnica que te ayuda a crear y reutilizar recursos costosos en lugar de crearlos y destruirlos en cada petición.
+
+Aunque el pooling es una solución para problemas de rendimiento en general, el boom de popularización de las arquitecturas serverless trajo un nuevo desafío en la gestión de estas conexiones.
+
+## ¿Qué es un entorno Serverless?
+
+A diferencia de un VPS que está siempre encendido, una función serverless tiene un ciclo de vida:
+
+1. **Cold Start** (Arranque en frío): Cuando la función se invoca por primera vez (o después de un tiempo de actividad, normalmente 5-15 minutos), el cloud provider necesita **crear un nuevo contenedor** para ejecutar el código. Este proceso es lento, ya que implica cargar todo, inicializar el runtime, etc.
+2. **Warm Start** (Arranque en caliente): Si una segunda invocación llega poco después de la primera (sin haber pasado 5-15 minutos), el cloud provider **reutiliza el contenedor** que ya está listo. Esto es mucho más rápido porque el entorno ya está inicializado.
+
+### ¿Para qué quiero Pooling entonces en Serverless?
+
+Aunque el cloud provider reutilice el contenedor en un **Warm Start**, el código de tu función se ejecuta desde el principio en cada invocación. Sin una solución de caching, esto implica que cada cliente que hace una solicitud a la función ejecutaría el código que crea una nueva instancia del pool de conexiones.
+
+En este escenario, dos clientes que se conecten al mismo contenedor "caliente" tendrían, de hecho, **instancias diferentes del pool**. Esto es ineficiente y puede llevar a que tu base de datos se sature rápidamente.
+
+Por ejemplo, el free tier de MongoDB  acepta 100 conexiones simultáneas. Si tenés un poco de tráfico y cometés este error, estarías creando un cuello de botella importante al consumir rápidamente todas las conexiones disponibles.
+
+### **Errores comunes que indican saturación de conexiones en Serverless**
+
+**Para MongoDB:**
+
+- `MongoServerSelectionError: "server selection error: connect ECONNREFUSED"` (La base de datos rechaza la conexión porque está saturada).
+- `"Topology was not created"` (Un error genérico que a menudo indica problemas de conectividad o de saturación del pool de conexiones).
+- `"MongoError: pool is exhausted"` (El pool de conexiones no tiene más conexiones disponibles).
+
+**Para Redis:**
+
+- `"Error: Max number of clients reached"` (Redis ha alcanzado su límite máximo de clientes conectados).
+- `"OOM command not allowed when used memory > 'maxmemory'"` (Redis se queda sin memoria, a menudo exacerbado por un número excesivo de clientes y operaciones simultáneas).
+- `"RedisError: Connection timeout"` (El cliente no puede establecer una conexión dentro del tiempo de espera permitido).
+
+### ¿Cuál es la solución?
+
+En entornos serverless, o en cualquier otro entorno la solución es hacer una instancia Singleton de esa conexión. Para poder reutilizar la misma instancia en cada petición.
+
+A continuación dejo un ejemplo con Moongose.
+
+```tsx
+import mongoose from 'mongoose';
+
+const MONGO_URL = YOUR_MONGO_URL;
+if (!MONGO_URL) throw new Error('Missing MongoDB connection string');
+
+let cached = global.mongoose;
+if (!cached) {
+  cached = global.mongoose = { conn: null, promise: null };
+}
+
+export async function mongoClient() {
+  if (cached.conn) return cached.conn;
+  if (!cached.promise) {
+    mongoose.set('strictQuery', false);
+    cached.promise = mongoose.connect(MONGO_URL, {});
+  }
+  cached.conn = await cached.promise;
+  return cached.conn;
+}
+
+Importante: La variable cached está en el objeto global.
+En los entornos como Node.js, las variables globales persisten entre
+invocaciones de una función serverless mientras el contenedor está "warm".
+Si la variable no fuera global, se resetearía en cada llamada.
+
+```
+
+Para instanciar la conexión basta con ponerlo en el punto inicial de tu aplicación. 
+
+Por ejemplo, en Express, podés ponerlo en el index.ts o donde configures tu aplicación.
+
+```tsx
+mongoClient();
+```
+
+## ¿Por qué antes no era tan común este problema?
+
+Este problema **no suele ocurrir con el modelo tradicional de VPS**, ya que en ese caso se levanta una única instancia del backend para gestionar todas las peticiones. Todos los clientes que se conectan a ese backend comparten el mismo pool de conexiones a la base de datos, lo que evita la saturación.
+
+## En general, ¿es malo tener más de un pool?
+
+No, tener más de un pool de conexiones no es malo en sí mismo. Es más, es una práctica común y necesaria en ciertos escenarios de arquitectura, como por ejemplo:
+
+- **Diferentes bases de datos:** Si tu aplicación necesita conectarse a más de una base de datos (por ejemplo, una en MongoDB para datos de usuario y otra en PostgreSQL para datos transaccionales), es necesario tener un pool de conexiones para cada una de ellas.
+- **Reglas de negocio específicas:** A veces, incluso con una sola base de datos, se crean pools separados para manejar diferentes tipos de tráfico. Por ejemplo, podrías tener un pool dedicado a operaciones de lectura (consultas analíticas o reportes) y otro para operaciones de escritura (actualizaciones de usuarios o transacciones). Esto ayuda a evitar que una tarea pesada sature las conexiones que son críticas para la experiencia del usuario.
+
+El problema que mencionamos acá para entornos serverless no es tener más de un pool, sino la **creación incontrolada de pools idénticos e innecesarios** para la misma base de datos, lo que consume recursos de forma ineficiente y puede llevar a la saturación.
