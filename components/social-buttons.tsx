@@ -47,7 +47,7 @@ const SocialButtons: React.FC = () => {
             `}
             title={social.name}
           >
-            <IconComponent size={16} />
+            <IconComponent size={24} />
           </Link>
         )
       })}

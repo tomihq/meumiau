@@ -1,6 +1,9 @@
 "use client"
+import dynamic from "next/dynamic";
 
-import Terminal from "./terminal"
+const Terminal = dynamic(
+  () => import("./terminal")
+);
 
 const TerminalWrapper = () => {
   return (
