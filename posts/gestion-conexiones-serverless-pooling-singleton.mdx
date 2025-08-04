@@ -35,7 +35,7 @@ A diferencia de un VPS que está siempre encendido, una función serverless tien
 1. **Cold Start**: Cuando la función se invoca por primera vez (o después de un tiempo de actividad, normalmente 5-15 minutos), el cloud provider necesita **crear un nuevo contenedor** para ejecutar el código. Este proceso es lento, ya que implica cargar todo, inicializar el runtime, etc.
 2. **Warm Start**: Si una segunda invocación llega poco después de la primera (< 5-15 minutos), el cloud provider **reutiliza el contenedor** que ya está listo. Esto es mucho más rápido porque el entorno ya está inicializado.
 
-### ¿Para qué quiero Pooling entonces en Serverless?
+### ¿Para qué quiero Pooling en Serverless?
 
 Aunque el cloud provider reutilice el contenedor en un **Warm Start**, el código de tu función se ejecuta desde el principio en cada invocación. Sin una solución de caching, esto implica que cada cliente que hace una solicitud a la función ejecutaría el código que crea una nueva instancia del pool de conexiones.
 
@@ -99,7 +99,7 @@ Por ejemplo, en Express, podés ponerlo en el index.ts o donde configures tu apl
 mongoClient();
 ```
 
-## ¿Por qué antes no era tan común este problema?
+## ¿Por qué esto no es común en un VPS?
 
 Este problema **no suele ocurrir con el modelo tradicional de VPS**, ya que en ese caso se levanta una única instancia del backend para gestionar todas las peticiones. 
 
@@ -113,4 +113,4 @@ No, tener más de un pool de conexiones no es malo en sí mismo. Es más, es una
 - **Diferentes bases de datos:** Si tu aplicación necesita conectarse a más de una base de datos (por ejemplo, una en MongoDB para datos de usuario y otra en PostgreSQL para datos transaccionales), es necesario tener un pool de conexiones para cada una de ellas.
 - **Reglas de negocio específicas:** A veces, incluso con una sola base de datos, se crean pools separados para manejar diferentes tipos de tráfico. Por ejemplo, podrías tener un pool dedicado a operaciones de lectura (consultas analíticas o reportes) y otro para operaciones de escritura (actualizaciones de usuarios o transacciones). Esto ayuda a evitar que una tarea pesada sature las conexiones que son críticas para la experiencia del usuario.
 
-El problema que mencionamos acá para entornos serverless no es tener más de un pool, sino la **creación incontrolada de pools idénticos e innecesarios** para la misma base de datos, lo que consume recursos de forma ineficiente y puede llevar a la saturación.
+El problema que mencionamos en Serverless no es tener más de un pool, sino la **creación incontrolada de pools idénticos e innecesarios** para la misma base de datos, lo que consume recursos de forma ineficiente y puede llevar a la saturación.
