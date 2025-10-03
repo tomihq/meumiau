@@ -27,7 +27,7 @@ const Hero = () => {
       </h1>
 
       <p className="text-2xl text-purple-300 mb-6 font-mono">
-        Computer Scientist
+        Computer Science
       </p>
     </>
   );
