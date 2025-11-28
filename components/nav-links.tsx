@@ -33,32 +33,30 @@ const NavLinks: React.FC = () => {
 
   const getLinkClasses = (href: string) => {
     const baseClasses = "font-mono text-xs px-2 md:px-3 py-1 rounded-full transition-all duration-300 whitespace-nowrap";
-    const activeClasses = "text-white bg-purple-500/50 shadow-lg shadow-purple-500/25";
-    const inactiveClasses = "text-gray-400 hover:text-purple-300 hover:bg-purple-500/10";
+    const activeClasses = "text-white bg-slate-400/50 shadow-lg shadow-gray-500/25";
+    const inactiveClasses = "text-gray-400 hover:text-gray-300 hover:bg-gray-500/10";
 
     return `${baseClasses} ${isActive(href) ? activeClasses : inactiveClasses}`;
   };
 
   return (
-    <div className="flex items-center gap-3 md:gap-6 min-w-max">
+    <div className="flex justify-center items-center gap-3 md:gap-6 min-w-max">
       <Link href="/" className={getLinkClasses("/")}>
         home
       </Link>
       <Link href="/skills" className={getLinkClasses("/skills")}>
         skills
       </Link>
-      <Link href="/projects" className={getLinkClasses("/projects")}>
-        projects
-      </Link>
-     {/*  <Link href="/notes" className={getLinkClasses("/notes")}>
-        notes
-      </Link>*/}
+
+      <Link href="/books" className={getLinkClasses("/books")}>
+        books
+      </Link> 
+
+     
       <Link href="/blog" className={getLinkClasses("/blog")}>
         blog
       </Link> 
-      {/* <Link href="/contact" className={getLinkClasses("/contact")}>
-        contact
-      </Link> */}
+     
     </div>
   );
 };

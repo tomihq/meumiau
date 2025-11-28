@@ -29,8 +29,8 @@ const ArgentinaClock: React.FC = () => {
 
   return (
     <div className="m-8 flex justify-center">
-      <div className="flex items-center gap-2 bg-black/20 backdrop-blur-md border border-purple-500/30 rounded-full px-4 py-2 text-purple-300 font-mono text-lg shadow-lg">
-        <Clock className="w-5 h-5 text-purple-400" />
+      <div className="flex items-center gap-2 bg-black/20 backdrop-blur-md border border-gray-500/30 rounded-full px-4 py-2 text-gray-300 font-mono text-lg shadow-lg">
+        <Clock className="w-5 h-5 text-gray-400" />
         <span className="text-lg">
           Argentina time: <span className="text-white">{time}</span>
         </span>

@@ -238,7 +238,7 @@ export default function Terminal({ currentSection, onNavigate = () => {} }: Term
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-4 right-4 z-50 ${t.button} md:bg-transparent hover:bg-black/90 border border-purple-500/50 text-purple-400 font-mono`}
+        className={`fixed bottom-4 right-4 z-50 ${t.button} md:bg-transparent hover:bg-black/90 border border-gray-500/50 text-gray-400 font-mono`}
         size="sm"
       >
         <TerminalIcon className={`w-4 h-4 mr-2 ${t.icon}`} />

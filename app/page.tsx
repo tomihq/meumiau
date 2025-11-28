@@ -18,11 +18,11 @@ export default function HomePage() {
         <section className="container mx-auto px-6 py-20 text-center">
           <Hero/>
           <ArgentinaClock />
-          <Card className="max-w-2xl mx-auto bg-black/20 backdrop-blur-md border-purple-500/30">
+          <Card className="max-w-2xl mx-auto bg-black/20 backdrop-blur-md border-gray-500/30">
             <CardContent className="p-6">
               <div className="flex items-center gap-2 mb-4">
-                <Sparkles className="w-5 h-5 text-purple-400" />
-                <span className="font-mono text-purple-300">About me</span>
+                <Sparkles className="w-5 h-5 text-gray-400" />
+                <span className="font-mono text-gray-300">About me</span>
               </div>
               <p className="text-gray-300 leading-relaxed">
                 {

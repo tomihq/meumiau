@@ -4,12 +4,12 @@ import { Triangle } from "lucide-react";
 export const dynamic = "force-static";
 export default function SkillsPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-white">
     
 
       <section className="container mx-auto px-6 py-20">
         <div className="text-center mb-12 mt-16">
-          <h1 className="text-4xl font-bold mb-4 pb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold mb-4 pb-4 bg-gradient-to-r text-white bg-clip-text text-transparent">
             Skills & Technologies
           </h1>
           <p className="text-gray-400 font-mono">{"// My tech arsenal"}</p>
@@ -17,11 +17,11 @@ export default function SkillsPage() {
 
         <div className="grid gap-8 max-w-4xl mx-auto">
           {/* About Me */}
-          <Card className="bg-black/20 backdrop-blur-md border-purple-500/30">
+          <Card className="bg-black/20 backdrop-blur-md border-gray-500/30">
             <CardContent className="p-6">
               <div className="flex items-center gap-2 mb-4">
                 <div className="text-2xl">👨‍💻</div>
-                <h2 className="text-xl font-semibold text-purple-300">About My Expertise</h2>
+                <h2 className="text-xl font-semibold text-gray-300">About My Expertise</h2>
               </div>
               <p className="text-gray-300 leading-relaxed mb-4">
                 Software Engineer with over 4 years of experience developing diverse applications for users worldwide. I
@@ -37,11 +37,11 @@ export default function SkillsPage() {
           </Card>
 
           {/* Backend Technologies */}
-          <Card className="bg-black/20 backdrop-blur-md border-purple-500/30">
+          <Card className="bg-black/20 backdrop-blur-md border-gray-500/30">
             <CardContent className="p-6">
               <div className="flex items-center gap-2 mb-4">
                 <div className="text-2xl">⚙️</div>
-                <h2 className="text-xl font-semibold text-purple-300">Backend Development</h2>
+                <h2 className="text-xl font-semibold text-gray-300">Backend Development</h2>
               </div>
               <div className="flex flex-wrap gap-3">
                 <Badge
@@ -67,14 +67,14 @@ export default function SkillsPage() {
                 </Badge>
                 <Badge
                   variant="secondary"
-                  className="bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 transition-colors"
+                  className="bg-gray-500/20 text-gray-300 hover:bg-gray-500/30 transition-colors"
                 >
                   <span className="mr-2">⚡</span>
                   C++
                 </Badge>
                 <Badge
                   variant="secondary"
-                  className="bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 transition-colors"
+                  className="bg-gray-500/20 text-gray-300 hover:bg-gray-500/30 transition-colors"
                 >
                   <span className="mr-2">☕</span>
                   Java
@@ -91,11 +91,11 @@ export default function SkillsPage() {
           </Card>
 
           {/* Frontend Technologies */}
-          <Card className="bg-black/20 backdrop-blur-md border-purple-500/30">
+          <Card className="bg-black/20 backdrop-blur-md border-gray-500/30">
             <CardContent className="p-6">
               <div className="flex items-center gap-2 mb-4">
                 <div className="text-2xl">🎨</div>
-                <h2 className="text-xl font-semibold text-purple-300">Frontend Development</h2>
+                <h2 className="text-xl font-semibold text-gray-300">Frontend Development</h2>
               </div>
               <p className="text-gray-300 mb-3">Languages, Libraries & Frameworks</p>
               <div className="flex flex-wrap gap-3">
@@ -139,11 +139,11 @@ export default function SkillsPage() {
           </Card>
 
           {/* Cloud & DevOps */}
-          <Card className="bg-black/20 backdrop-blur-md border-purple-500/30">
+          <Card className="bg-black/20 backdrop-blur-md border-gray-500/30">
             <CardContent className="p-6">
               <div className="flex items-center gap-2 mb-4">
                 <div className="text-2xl">☁️</div>
-                <h2 className="text-xl font-semibold text-purple-300">Cloud & DevOps</h2>
+                <h2 className="text-xl font-semibold text-gray-300">Cloud & DevOps</h2>
               </div>
               <div className="flex flex-wrap gap-3">
                 <Badge
@@ -194,11 +194,11 @@ export default function SkillsPage() {
           </Card>
 
           {/* Databases & Tools */}
-          <Card className="bg-black/20 backdrop-blur-md border-purple-500/30">
+          <Card className="bg-black/20 backdrop-blur-md border-gray-500/30">
             <CardContent className="p-6">
               <div className="flex items-center gap-2 mb-4">
                 <div className="text-2xl">🗄️</div>
-                <h2 className="text-xl font-semibold text-purple-300">Databases & Tools</h2>
+                <h2 className="text-xl font-semibold text-gray-300">Databases & Tools</h2>
               </div>
               <div className="flex flex-wrap gap-3">
                 <Badge
@@ -228,7 +228,7 @@ export default function SkillsPage() {
                 </Badge>
                 <Badge
                   variant="secondary"
-                  className="bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 transition-colors"
+                  className="bg-gray-500/20 text-gray-300 hover:bg-gray-500/30 transition-colors"
                 >
                   <span className="mr-2">🔗</span>
                   Prisma, TypeORM
@@ -247,36 +247,36 @@ export default function SkillsPage() {
           </Card>
 
           {/* Problem-Solving Methodology */}
-          <Card className="bg-black/20 backdrop-blur-md border-purple-500/30">
+          <Card className="bg-black/20 backdrop-blur-md border-gray-500/30">
             <CardContent className="p-6">
               <div className="flex items-center gap-2 mb-4">
                 <div className="text-2xl">🧠</div>
-                <h2 className="text-xl font-semibold text-purple-300">Problem-Solving Methodology</h2>
+                <h2 className="text-xl font-semibold text-gray-300">Problem-Solving Methodology</h2>
               </div>
               <div className="space-y-3">
                 <div className="flex items-start gap-3">
-                  <span className="text-purple-400 font-bold">1.</span>
+                  <span className="text-gray-400 font-bold">1.</span>
                   <p className="text-gray-300">
                     <strong className="text-white">Problem Definition & Solution Design:</strong> Analyze the problem
                     and conceptualize the solution considering design, scope, and accessibility.
                   </p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <span className="text-purple-400 font-bold">2.</span>
+                  <span className="text-gray-400 font-bold">2.</span>
                   <p className="text-gray-300">
                     <strong className="text-white">Efficient Implementation:</strong> Dedicate focused time to implement
                     the solution.
                   </p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <span className="text-purple-400 font-bold">3.</span>
+                  <span className="text-gray-400 font-bold">3.</span>
                   <p className="text-gray-300">
                     <strong className="text-white">Functionality & Refinement:</strong> Ensure it works, then iterate to
                     enhance performance.
                   </p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <span className="text-purple-400 font-bold">4.</span>
+                  <span className="text-gray-400 font-bold">4.</span>
                   <p className="text-gray-300">
                     <strong className="text-white">Client Satisfaction:</strong> Continuously iterate until client
                     satisfaction is achieved.

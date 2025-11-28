@@ -40,7 +40,7 @@ export default function RootLayout({
         />
       </Head>
       <body
-        className={` ${fontSans.className} font-sans bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white relative`}
+        className={` ${fontSans.className} font-sans bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-white relative`}
       >
         <Nav />
         {children}

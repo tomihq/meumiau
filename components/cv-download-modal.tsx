@@ -44,12 +44,12 @@ export function CVDownloadModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="border border-purple-400 rounded-full hover:border-purple-500 transition-all drop-shadow-sm py-3 px-4 text-sm flex flex-row gap-2 items-center justify-center w-fit bg-transparent hover:bg-transparent">
+        <Button className="border border-gray-400 rounded-full hover:border-gray-500 transition-all drop-shadow-sm py-3 px-4 text-sm flex flex-row gap-2 items-center justify-center w-fit bg-transparent hover:bg-transparent">
         <DownloadIcon size={14} />
         Download Resume
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md  bg-gradient-to-bl from-purple-700 via-purple-900 to-purple-950 border-none rounded-xl sm:rounded-xl brightness-95">
+      <DialogContent className="sm:max-w-md  bg-gradient-to-bl from-gray-700 via-gray-800 to-gray-900 border-none rounded-xl sm:rounded-xl brightness-95">
         <DialogHeader className="text-center">
           <DialogTitle className="text-2xl font-semibold text-white ">
           Select a language
@@ -63,7 +63,7 @@ export function CVDownloadModal() {
             <Button
               key={language.code}
               variant="outline"
-              className="w-full justify-start h-14 text-lg font-medium border-2 border-purple-500 hover:border-purple-700 hover:bg-purple-800 hover:text-white  transition-all duration-200 bg-transparent"
+              className="w-full justify-start h-14 text-lg font-medium border-2 border-gray-500 hover:border-gray-700 hover:bg-gray-800 hover:text-white  transition-all duration-200 bg-transparent"
               onClick={() => handleDownload(language.file)}
             >
               <span className="text-2xl mr-4">{language.flag}</span>
