@@ -26,7 +26,7 @@ export default function HomePage() {
               </div>
               <p className="text-gray-300 leading-relaxed">
                 {
-                  "I'm a software engineer passionate about crafting exceptional digital experiences. I specialize in modern web technologies such as React, Next.js, and Node.js. Outside of coding, I'm often reading or exploring new areas of learning to continually grow both personally and professionally."
+                  "I'm a software engineer passionate about crafting exceptional digital experiences. Outside of coding, I'm often reading or exploring new areas of learning to continually grow both personally and professionally."
                 }
               </p>
             

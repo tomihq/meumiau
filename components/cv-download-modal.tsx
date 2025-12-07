@@ -10,36 +10,27 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { FileText, Download, DownloadIcon } from "lucide-react"
+import { ExternalLink, DownloadIcon } from "lucide-react"
+import Link from "next/link"
 
 const languages = [
   {
     code: "es",
     name: "Español",
     flag: "🇪🇸",
-    file: "/assets/cv/hernandez-tomas-es-version.pdf",
+    file: "https://drive.google.com/file/d/1Nw1o5nLJWV8AvvxMFE3D1MhIhzRNwJK-/preview",
   },
   {
     code: "en",
     name: "English",
     flag: "🇺🇸",
-    file: "/assets/cv/hernandez-tomas-eng-version.pdf",
+    file: "https://drive.google.com/file/d/1C1-V58xjaLn22-ZzzvzSU-6EuAl4yBJ8/preview",
   }
 ]
 
 export function CVDownloadModal() {
   const [open, setOpen] = useState(false)
 
-  const handleDownload = (file: string) => {
-    // Crear un enlace temporal para descargar el archivo
-    const link = document.createElement("a")
-    link.href = file
-    link.download = file.split("/").pop() || "cv.pdf"
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    setOpen(false)
-  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -60,16 +51,16 @@ export function CVDownloadModal() {
         </DialogHeader>
         <div className="grid gap-3 py-4">
           {languages.map((language) => (
-            <Button
+            <Link
               key={language.code}
-              variant="outline"
-              className="w-full justify-start h-14 text-lg font-medium border-2 border-gray-500 hover:border-gray-700 hover:bg-gray-800 hover:text-white  transition-all duration-200 bg-transparent"
-              onClick={() => handleDownload(language.file)}
+              className="flex flex-row  items-center p-4 w-full justify-start h-14 text-lg font-medium border-2 border-gray-500 hover:border-gray-700 hover:bg-gray-800 hover:text-white  transition-all duration-200 bg-transparent"
+              href={language.file}
+              target="_blank"
             >
               <span className="text-2xl mr-4">{language.flag}</span>
               <span className="flex-1 text-left">{language.name}</span>
-              <Download className="w-5 h-5 ml-2 text-gray-400" />
-            </Button>
+              <ExternalLink className="w-5 h-5 ml-2 text-gray-400" />
+            </Link>
           ))}
         </div>
         <div className="text-center pt-2">
