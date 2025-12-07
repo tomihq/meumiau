@@ -36,8 +36,8 @@ export function CVDownloadModal() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="border border-gray-400 rounded-full hover:border-gray-500 transition-all drop-shadow-sm py-3 px-4 text-sm flex flex-row gap-2 items-center justify-center w-fit bg-transparent hover:bg-transparent">
-        <DownloadIcon size={14} />
-        Download Resume
+        <ExternalLink size={14} />
+        See Resume
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md  bg-gradient-to-bl from-gray-700 via-gray-800 to-gray-900 border-none rounded-xl sm:rounded-xl brightness-95">
@@ -46,7 +46,7 @@ export function CVDownloadModal() {
           Select a language
                     </DialogTitle>
           <DialogDescription className="text-gray-300 mt-2">
-          Choose the language in which you'd like to download my resume.
+          Choose the language in which you'd like to see my resume.
 </DialogDescription>
         </DialogHeader>
         <div className="grid gap-3 py-4">
