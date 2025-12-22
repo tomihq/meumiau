@@ -24,7 +24,8 @@ export default async function BooksPage({params}) {
   return (
     <main className=" max-w-4xl mx-auto gap-4 min-h-screen">
         <div className="max-w-lg container mx-auto px-6 py-28 md:py-32">
-      <BookList/>
+          <h1 className="text-3xl font-bold mb-6">Books that I recommend</h1>
+        <BookList/>
 
         </div>
        

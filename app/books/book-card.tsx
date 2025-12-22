@@ -6,10 +6,11 @@ interface BookCardProps {
 
 export function BookCard({ book }: BookCardProps) {
   return (
-    <article className="border-b border-border pb-6 last:border-0 border-gray-600">
+    <article className="pb-2 last:border-0 border-gray-600">
       <div className="mb-2 flex items-baseline justify-between gap-4">
-        <h2 className="text-2xl  text-gray-100 font-medium">{book.title}</h2>
-        <span className="text-sm text-gray-100">{book.rating}/5</span>
+        <p className="text-lg font-sans text-gray-100 font-bold border-b-2 border-b-gray-700 ">
+          <a href={book.url + '?ref=tomihq.com'}>{book.title}</a>
+        </p>
       </div>
       <p className="mb-2 text-sm text-gray-100">
         {book.author} · {book.year}
