@@ -45,7 +45,6 @@ export default function RootLayout({
         <Nav />
         {children}
         <TerminalWrapper />
-        <BackgroundPattern />
 
         <Footer />
       </body>

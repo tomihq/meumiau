@@ -39,16 +39,25 @@ function readMDXFile(filePath: string) {
 }
 
 function getMDXData(dir: string) {
-    let mdxFiles = getMDXFiles(dir);
-    return mdxFiles.map((file) => {
-        let { metadata, content } = readMDXFile(path.join(dir, file));
-        let slug = path.basename(file, path.extname(file));
-        return {
-            metadata,
-            slug,
-            content,
-        };
-    });
+  const mdxFiles = getMDXFiles(dir)
+
+  return mdxFiles
+    .map((file) => {
+      const { metadata, content } = readMDXFile(path.join(dir, file))
+      const slug = path.basename(file, path.extname(file))
+
+      return {
+        metadata,
+        slug,
+        content,
+      }
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.metadata.publishedAt).getTime()
+      const dateB = new Date(b.metadata.publishedAt).getTime()
+
+      return dateB - dateA // más nuevo primero
+    })
 }
 
 export const getBlogPosts = cache(() => {

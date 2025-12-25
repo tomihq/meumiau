@@ -24,15 +24,12 @@ export default function SkillsPage() {
                 <h2 className="text-xl font-semibold text-gray-300">About My Expertise</h2>
               </div>
               <p className="text-gray-300 leading-relaxed mb-4">
-                Software Engineer with over 4 years of experience developing diverse applications for users worldwide. I
-                am a curious learner, constantly seeking to refine my skills and knowledge in every domain I engage
-                with.
+           Software Engineer with experience building real-world products, focused on problem-solving and developing clear,
+            maintainable, and user-centered solutions. I work with an end-to-end mindset, contributing across backend, frontend, and
+            deployment processes. I'm driven by continuous learning, feedback, and collaboration within teams that value both technical
+            and human growth.
               </p>
-              <p className="text-gray-300 leading-relaxed">
-                When building products, I am my first user, and I am only satisfied when the individuals for whom I
-                designed the solution are equally content. Solving complex problems and enabling more with less is what
-                truly excites me.
-              </p>
+             
             </CardContent>
           </Card>
 
