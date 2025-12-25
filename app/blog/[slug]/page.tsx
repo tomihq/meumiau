@@ -65,7 +65,7 @@ export default async function PostPage({params}) {
   }
 
   return (
-        <main className=" max-w-4xl mx-auto gap-4">
+        <main className=" max-w-4xl mx-auto gap-4 px-6 py-10">
          <script
         type="application/ld+json"
         suppressHydrationWarning
@@ -89,7 +89,7 @@ export default async function PostPage({params}) {
         }}
       />
       
-        <article className="prose prose-gray min-h-screen border-0  bg-black/20  backdrop-blur-md border-purple-500/30  p-8 py-20">
+        <article className="prose prose-gray min-h-screen border-0    backdrop-blur-md border-purple-500/30  p-8 py-20">
           
           <div className="max-w-prose mx-auto">
           <div className="space-y-2 not-prose ">

@@ -22,9 +22,13 @@ export async function generateMetadata({
 
 export default async function BooksPage({params}) {
   return (
-    <main className=" max-w-4xl mx-auto gap-4 min-h-screen">
-        <div className="max-w-lg container mx-auto px-6 py-28 md:py-32">
-          <h1 className="text-3xl font-bold mb-6">Books that I recommend</h1>
+    <main className=" max-w-2xl mx-auto gap-4 min-h-screen">
+        <div className="container max-w-2xl mx-auto px-6 py-20">
+         <div className="text-left mb-12 mt-16">
+          <h1 className="text-4xl font-bold mb-4 pb-4 bg-gradient-to-r text-white bg-clip-text text-transparent">
+            Books that I recommend
+          </h1>
+        </div>
         <BookList/>
 
         </div>

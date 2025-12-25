@@ -7,7 +7,7 @@ export default function SkillsPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 text-white">
     
 
-      <section className="container mx-auto px-6 py-20">
+      <section className="container max-w-2xl mx-auto px-6 py-20">
         <div className="text-center mb-12 mt-16">
           <h1 className="text-4xl font-bold mb-4 pb-4 bg-gradient-to-r text-white bg-clip-text text-transparent">
             Skills & Technologies

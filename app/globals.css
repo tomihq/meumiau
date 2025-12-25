@@ -141,7 +141,7 @@ body {
 }
 
 .prose pre code {
-  @apply bg-transparent text-green-500 p-0 text-sm;
+  @apply bg-transparent  p-0 text-sm;
   border: none;
   border-radius: 0;
 }
