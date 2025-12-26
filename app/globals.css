@@ -81,8 +81,8 @@ body {
 
 
 .prose p {
-  @apply text-gray-200 mb-6;
-  font-size: 1.125rem;
+  @apply text-gray-200 ;
+  font-size: 1rem;
   line-height: 1.8;
 }
 
