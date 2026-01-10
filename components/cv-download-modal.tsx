@@ -18,13 +18,13 @@ const languages = [
     code: "es",
     name: "Español",
     flag: "🇪🇸",
-    file: "https://drive.google.com/file/d/1Vn1XhMMsA8g5wWxKOjWPKYCe28k_zca1/preview",
+    file: "https://drive.google.com/file/d/1NfcaRd0L9OC_js2TOo6k8uO2-mgd0CIW/preview",
   },
   {
     code: "en",
     name: "English",
     flag: "🇺🇸",
-    file: "https://drive.google.com/file/d/1I6x-n1HWUQv_1RTEIX0RD-RejzU_nVBn/preview",
+    file: "https://drive.google.com/file/d/1hjLkMlCqQPTZEBs7gt_Mmm7qlCBjvkCC/preview",
   }
 ]
 
