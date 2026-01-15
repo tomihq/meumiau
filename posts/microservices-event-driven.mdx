@@ -76,11 +76,50 @@ También es más difícil de migrar algunas tecnologías viejas. Cualquier bug p
 
 Esto no suele ser bueno porque hay algunos procesos que requieren de otros paradigmas o incluso lenguajes que performan mucho mejor para una tarea dada.
 
-Por ejemplo, un servicio de procesamiento de imágenes podría beneficiarse de Python con librerías especializadas, mientras que un servicio de alta performance podría necesitar Go o Rust.
+**Ejemplo 1: Servicios de Inteligencia Artificial**
 
-## Solución: Arquitectura de microservicios
+Imaginemos que tenés una aplicación de e-commerce escrita en TypeScript/Node.js. Querés agregar funcionalidades de IA como:
+- Recomendaciones personalizadas de productos
+- Análisis de sentimiento en reviews
+- Detección de fraudes con machine learning
+- Procesamiento de imágenes para búsqueda visual
 
-### ¿Qué son los microservicios?
+En un monolito, tendrías que implementar todo esto en TypeScript, lo cual es problemático porque:
+- Las librerías de machine learning más potentes (TensorFlow, PyTorch, scikit-learn) están principalmente en Python.
+- Python tiene un ecosistema mucho más rico para IA/ML con miles de librerías especializadas.
+- El procesamiento numérico en Python con NumPy es significativamente más rápido que en JavaScript.
+- La comunidad de IA/ML está principalmente en Python.
+
+Si intentás hacer esto en TypeScript, terminarías:
+- Reimplementando funcionalidades que ya existen en Python.
+- Usando bindings de JavaScript a librerías de Python (lo cual es lento y complicado).
+- O simplemente no pudiendo implementar ciertas funcionalidades por falta de herramientas.
+
+**Ejemplo 2: Análisis de Datos y Big Data**
+
+Servicios que procesan grandes volúmenes de datos se benefician de:
+- Python con Pandas, Dask, o PySpark para análisis de datos.
+- Scala/Java para procesamiento distribuido con Apache Spark.
+- R para análisis estadísticos avanzados.
+
+TypeScript simplemente no tiene el ecosistema ni el rendimiento para estas tareas.
+
+**El problema real**: En un monolito, si tu aplicación principal está en TypeScript, estás forzado a usar TypeScript para todo, incluso cuando hay herramientas mucho mejores disponibles en otros lenguajes. Esto te limita en lo que podés construir y te hace más lento de lo que necesitás ser.
+siendo un solo deployable.
+
+### ¿Cuándo Microservicios es la solución correcta?
+
+Microservicios es la solución cuando necesitás resolver problemas de **escalabilidad organizacional y del sistema** que las otras arquitecturas no pueden resolver:
+
+1. **Escalabilidad organizacional**: Cuando tu equipo crece y necesitás que múltiples equipos trabajen de forma independiente sin pisarse entre sí.
+
+2. **Escalabilidad del sistema**: Cuando diferentes partes de tu aplicación tienen diferentes necesidades de recursos, tráfico, o tecnologías.
+
+3. **Independencia de despliegue**: Cuando necesitás desplegar y escalar componentes individuales sin afectar el resto del sistema.
+
+4. **Flexibilidad tecnológica**: Cuando diferentes partes de tu aplicación se benefician de diferentes lenguajes o tecnologías. Esta es una de las ventajas más poderosas de los microservicios.
+
+## ¿Qué son los microservicios?
 
 Organiza la lógica empresarial como una colección de servicios poco acoplados y desplegados individualmente.
 
@@ -105,6 +144,47 @@ En una arquitectura monolítica cada servidor tiene toda la aplicación y conlle
 - Si algún microservicio necesita más recursos, le podés asignar a su contenedor más potencia de CPU o más RAM (escalado vertical).
 - Cada microservicio puede estar implementado con un lenguaje diferente. Ellos pueden refactorizar (o cambiar el lenguaje según necesiten) de manera más eficaz.
 - Mayor estabilidad para todo el sistema: Si algún microservicio falla podemos levantar más instancias de ese rápidamente sin tener que esperar un deploy entero de un codebase gigantesco.
+
+**Flexibilidad tecnológica en acción:**
+
+La capacidad de usar diferentes tecnologías no es solo una conveniencia, es una **ventaja competitiva real**:
+
+**Ejemplo: Servicio de IA en Python vs TypeScript**
+
+Supongamos que tenés un **RecommendationService** que necesita procesar millones de interacciones de usuarios para generar recomendaciones personalizadas.
+
+- **En un monolito TypeScript**: Tendrías que usar librerías de JavaScript para ML que son:
+  - Más lentas (JavaScript no está optimizado para computación numérica).
+  - Menos maduras (el ecosistema de ML en JS es pequeño comparado con Python).
+  - Más limitadas (muchas técnicas de ML avanzadas no están disponibles).
+
+- **En un microservicio Python**: Podés usar:
+  - TensorFlow o PyTorch (las librerías más potentes de ML del mundo).
+  - NumPy (optimizado en C, **mucho más rápido** que cualquier equivalente en JS).
+  - Pandas (el estándar de la industria para análisis de datos).
+  - scikit-learn (cientos de algoritmos de ML listos para usar).
+
+**Resultado**: El servicio en Python puede ser **10-100 veces más rápido** para tareas de ML que el equivalente en TypeScript, y además tenés acceso a funcionalidades que simplemente no existen en JavaScript.
+
+**Otro ejemplo: Servicio de alta performance en Go**
+
+Un **PaymentService** que procesa transacciones necesita:
+- Baja latencia (< 10ms).
+- Alto throughput (millones de transacciones por segundo).
+- Uso eficiente de memoria.
+
+- **En un monolito TypeScript**: Node.js tiene limitaciones:
+  - El event loop puede tener problemas con operaciones CPU-intensivas.
+  - Mayor consumo de memoria.
+  - Menor rendimiento en operaciones concurrentes.
+
+- **En un microservicio Go**: Podés lograr:
+  - Latencia ultra-baja (Go compila a código nativo).
+  - Concurrencia extremadamente eficiente con goroutines.
+  - Bajo consumo de memoria.
+  - **2-5 veces mejor rendimiento** que Node.js para este tipo de cargas.
+
+**La clave**: No es solo que "podés usar diferentes lenguajes", es que **necesitás diferentes lenguajes** para construir sistemas que realmente performen bien en cada dominio específico.
 
 **Importante**: En Microservicios, normalmente metés en un mismo servidor varios contenedores (microservicios), y podés escalar cada uno verticalmente según necesites. A un microservicio le podés asignar 2GB de RAM, al otro 4GB, y así sucesivamente.
 
