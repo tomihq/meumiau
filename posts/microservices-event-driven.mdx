@@ -219,84 +219,118 @@ Si las responsabilidades de los microservicios están mal distribuidas podemos t
 
 ## Comunicación entre microservicios
 
-Existen dos modelos principales de comunicación entre microservicios:
+Existen **dos modelos principales de comunicación entre microservicios**, que se diferencian principalmente por si el emisor espera o no una respuesta inmediata.
 
-### Request-Response model
+### Request-Response Model
 
-Es el modelo síncrono donde un servicio hace una petición HTTP y espera una respuesta.
+Es el **modelo síncrono**, donde un servicio realiza una petición (generalmente HTTP) a otro servicio y **espera la respuesta** para continuar su ejecución.
 
 **Características:**
-- Comunicación síncrona: El Sender manda una petición y tiene que esperar que el Receiver responda.
-- Si la respuesta nunca llega, se queda colgado.
-- El Sender necesita saber exactamente quién va a recibir la petición y cómo.
+- **Comunicación síncrona:** el *Sender* envía una petición y debe esperar a que el *Receiver* responda.
+- **Bloqueo temporal:** si la respuesta no llega (por caída o lentitud del Receiver), el Sender queda bloqueado hasta que ocurra un timeout.
+- **Acoplamiento explícito:** el Sender necesita conocer exactamente:
+  1. quién es el Receiver,
+  2. cómo es su API,
+  3. dónde está ubicado.
 
 **Casos de uso:**
-- Cuando el usuario quiere la respuesta YA (ej.: cargar productos en una tienda antes de ingresar a la página).
-- Cuando la interacción es tan simple que no necesitamos un modelo Event-Driven (por el costo de mantener un Message-Broker).
+- Cuando el usuario **necesita la respuesta inmediatamente**  (ej.: cargar los productos antes de renderizar una página).
+- Cuando la interacción es **simple y directa**, y no justifica el costo adicional de:
+  1. mantener un message broker,
+  2. manejar eventos,
+  3. lidiar con consistencia eventual.
 
-### Event-Driven architecture
 
-Comúnmente se usa con la arquitectura de Microservicios estableciendo una comunicación asíncrona basada en eventos entre microservicios, lo cual nos permite conseguir un desacoplamiento aún mayor y una mayor escalabilidad.
+### Event-Driven Architecture
+
+Este modelo se basa en una **comunicación asíncrona orientada a eventos**.  
+Un servicio publica un evento y uno o más servicios reaccionan a él, sin que exista una llamada directa entre ellos.
+
+Es un enfoque muy común en arquitecturas de microservicios, ya que permite **mayor desacoplamiento y escalabilidad**.
 
 **Características:**
-- Comunicación asíncrona: El Producer no espera ninguna respuesta del Consumer ni tampoco de los Consumers del evento.
-- Inversion of Control: Al Producer no le interesa y puede que ni siquiera conozca a aquellos servicios que van a consumir el evento.
-- Loose Coupling: Esta es la razón por la cual la Event-Driven Architecture va tan de la mano con la arquitectura de microservicios.
+- **Comunicación asíncrona:** el *Producer* publica un evento y **no espera ninguna respuesta**.
+- **Inversion of Control:** el Producer no controla ni necesita conocer qué servicios consumirán el evento.
+- **Loose Coupling:** los servicios están desacoplados tanto a nivel estructural como temporal.
+- **Uno a muchos:** un mismo evento puede ser consumido por múltiples *Consumers*.
 
-**Ventajas sobre Request-Response:**
-1. El Producer puede pasar a procesar su siguiente tarea en lugar de esperar una respuesta que capaz quizá no necesita.
+**Ventajas sobre Request–Response:**
+1. El Producer puede continuar procesando su siguiente tarea en lugar de esperar una respuesta que tal vez no necesita.
 2. El Producer no necesita conocer todos los servicios que consumirán el evento.
-3. Mayor desacoplamiento entre servicios.
+3. Se logra un **mayor desacoplamiento** entre servicios, facilitando la escalabilidad y la evolución del sistema.
+
 
 ### ¿Cuándo usar cada uno?
 
-En la realidad, una arquitectura de Microservicios combina:
+En la práctica, una arquitectura de microservicios **no elige uno u otro**, sino que **combina ambos modelos**:
 
 1. **Event-Driven Architecture**
-2. **Synchronous request-response model**
+2. **Synchronous Request–Response Model**
 
-Es mejor:
+Una buena regla general es:
 
-1. Empezar con un request-response model.
-2. Upgrade a event-driven architecture cuando **solo sea necesario**.
-
-## Casos de uso para Event-Driven architecture
+1. **Empezar con Request–Response**, por su simplicidad y menor costo operativo.
+2. **Evolucionar hacia Event-Driven** únicamente cuando sea necesario:
+   - mayor escalabilidad,
+   - menor acoplamiento,
+   - procesamiento asíncrono,
+   - tolerancia a fallos.
+## Casos de uso para Event-Driven Architecture
 
 ### 1. Fire and Forget
 
-En casos donde el cliente no espera una respuesta o no espera una respuesta inmediata.
+Se utiliza cuando el cliente **no espera una respuesta**, o bien **no necesita que la respuesta sea inmediata**.
 
 **Ejemplos:**
-- **Esperás respuesta (no inmediata)**: Cuando querés generar un reporte pesado que no sabés cuánto va a demorar. La idea es que lo generes y le mandes una notificación al usuario cuando el proceso haya terminado.
-- **No esperás respuesta**: Cuando un usuario deja una review en un producto por ejemplo, al usuario no le importa que le notifiquemos cuando haya dejado la review, sino solamente dejarla.
+- **Respuesta no inmediata:** generar un reporte pesado cuyo tiempo de procesamiento es desconocido. El sistema inicia el proceso y notifica al usuario cuando el reporte está listo.
+- **Sin respuesta:** cuando un usuario deja una reseña en un producto. Al usuario solo le importa que la acción se haya registrado, no recibir una confirmación posterior.
+
 
 ### 2. Entrega confiable
 
-Cuando no nos podemos permitir no recibir una acción.
+Aplica cuando **no nos podemos permitir perder eventos o acciones**.
 
 **Ejemplos:**
-- En transacciones financieras no podemos perder ningún mensaje.
-- Si una persona pagó un producto pero no notificamos al servicio de entregas porque se cayó, no podemos permitirnos no saber qué eso sucedió. De alguna manera tenemos que seguir enviándolo infinitamente hasta que se reciba.
+- En transacciones financieras, ningún mensaje puede perderse.
+- Si un usuario paga un producto pero el servicio de entregas no es notificado debido a una caída, el sistema debe **reintentar el envío del evento** hasta garantizar que sea recibido.
 
-### 3. Entrega infinita de eventos
 
-En información de ubicación de tiempo real o de sensores, mandamos tanta información cada milisegundo que no podemos permitir bloquearnos. Ni siquiera nuestro sistema debería ponerse a pensar qué hacer, ni tampoco procesarlos. Solamente deberíamos recibirlos y encolarlos para un posterior análisis.
+### 3. Flujo continuo de eventos (alta frecuencia)
 
-### 4. Detección de anomalías o reconocimiento de patrones
+En escenarios como ubicación en tiempo real o datos de sensores, se generan **grandes volúmenes de eventos por segundo**, por lo que no es viable bloquear ni procesar cada evento inmediatamente.
 
-Si el broker no está recibiendo mensajes algún problema con los Producers está habiendo.
+**Enfoque:**
+- Recibir los eventos.
+- Encolarlos.
+- Procesarlos posteriormente para análisis o agregación.
+
+### 4. Detección de anomalías y reconocimiento de patrones
+
+Los eventos permiten **monitorear el comportamiento del sistema**.
+
+**Ejemplo:**
+- Si el message broker deja de recibir eventos, puede indicar un problema en los Producers, lo que permite detectar fallos de forma temprana.
+
 
 ### 5. Broadcasting
 
-Cuando queremos enviar la noticia de que un cliente hizo X a otros servicios, pero ese cliente ni siquiera se enteró de que efectos secundarios acaba de producir. Esto se suele usar en publicidades de sitios web para cobrar.
+Se utiliza cuando un evento debe ser **difundido a múltiples servicios**, sin que el cliente que originó la acción tenga conocimiento de los efectos secundarios.
 
-**Ejemplo**: Cuando recibiste un click, tu AdService a través de un MessageBroker le comunica a los demás servicios lo que sucedió pero el cliente ni se enteró.
+**Ejemplo:**
+- En sistemas de publicidad, al recibir un click, el *AdService* publica un evento que es consumido por múltiples servicios (facturación, métricas, analytics), sin impactar en la experiencia del usuario.
+
 
 ### 6. Buffering
 
-Podemos tolerar una masiva cantidad de eventos viniendo de un único servicio poniendo un message-broker y comunicar asíncronamente los servicios.
+Permite **absorber picos de tráfico** mediante un message broker, evitando sobrecargar los servicios consumidores.
 
-**Ejemplo**: Si tenés una red social, y un post se hace super viral a tal manera que responden 1 millón de personas a la vez, en vez de hacer la recepción y mandar directo a PostsService y CommentsService de un saque ponés en el medio un Message Broker para recibir todos esos mensajes y poder ir derivando a los servicios a medida que pueden procesarlos. Esto te permite recibir todos los mensajes pero no sobrecargar los servicios.
+**Ejemplo:**
+- En una red social, si un post se vuelve viral y recibe millones de interacciones simultáneas, el message broker actúa como buffer:
+  - recibe todos los eventos,
+  - los encola,
+  - y los distribuye gradualmente a servicios como *PostsService* y *CommentsService* según su capacidad de procesamiento.
+
+Este enfoque garantiza que los eventos no se pierdan y que los servicios no colapsen ante picos de demanda.
 
 ## Patrones de Event-Driven architecture
 
