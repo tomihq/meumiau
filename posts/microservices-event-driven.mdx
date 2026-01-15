@@ -7,16 +7,13 @@ summary: 'Exploro cómo una arquitectura de microservicios evoluciona a partir d
 ## ¿Qué vas a aprender acá?
 
 Al terminar este post vas a entender:
-- **Cuándo tiene sentido pasar de un monolito a microservicios** y qué problemas aparecen cuando lo hacés.
-- **Cómo se comunican los microservicios** (Request-Response vs Event-Driven) y cuándo elegir cada modelo.
-- **Qué problemas reales resuelve una arquitectura Event-Driven** y en qué escenarios es una mala idea.
-- **Cómo escalar un sistema de microservicios** usando API Gateway, Load Balancers y Service Discovery.
-- **Por qué la consistencia es un problema distribuido** y cómo abordarla sin transacciones globales.
-- **Cómo funciona el patrón Saga**, cuándo usarlo y qué tradeoffs introduce.
-- **Cómo evolucionar APIs sin romper consumidores**, usando versionado y backward compatibility.
-- **Por qué la observabilidad es obligatoria** en microservicios y cómo entender qué está pasando cuando algo falla.
-
-Este no es un post de definiciones, sino un recorrido por **problemas reales y soluciones prácticas** que aparecen cuando un sistema crece.
+- **Por qué pasar de un monolito a microservicios no es gratis** y qué nuevos problemas aparecen al hacerlo.
+- **Cómo se comunican los microservicios** y cuándo usar Request-Response o Event-Driven.
+- **Qué limitaciones tiene el modelo síncrono** y en qué escenarios una arquitectura Event-Driven es necesaria.
+- **Qué pasa cuando tenés muchos microservicios y clientes acoplados**, y cómo un API Gateway resuelve ese problema.
+- **Qué sucede cuando un microservicio recibe mucho tráfico**, y cómo escalarlo usando Load Balancers y Service Discovery.
+- **Por qué la consistencia se vuelve un problema distribuido**, y cómo el patrón Saga permite manejarla sin transacciones globales.
+- **Por qué debuggear microservicios es difícil**, y cómo la observabilidad permite entender qué está pasando en producción.
 
 ## Conceptos importantes antes de empezar
 
@@ -119,103 +116,68 @@ TypeScript simplemente no tiene el ecosistema ni el rendimiento para estas tarea
 **El problema real**: En un monolito, si tu aplicación principal está en TypeScript, estás forzado a usar TypeScript para todo, incluso cuando hay herramientas mucho mejores disponibles en otros lenguajes. Esto te limita en lo que podés construir y te hace más lento de lo que necesitás ser.
 siendo un solo deployable.
 
-### ¿Cuándo Microservicios es la solución correcta?
-
-Microservicios es la solución cuando necesitás resolver problemas de **escalabilidad organizacional y del sistema** que las otras arquitecturas no pueden resolver:
-
-1. **Escalabilidad organizacional**: Cuando tu equipo crece y necesitás que múltiples equipos trabajen de forma independiente sin pisarse entre sí.
-
-2. **Escalabilidad del sistema**: Cuando diferentes partes de tu aplicación tienen diferentes necesidades de recursos, tráfico, o tecnologías.
-
-3. **Independencia de despliegue**: Cuando necesitás desplegar y escalar componentes individuales sin afectar el resto del sistema.
-
-4. **Flexibilidad tecnológica**: Cuando diferentes partes de tu aplicación se benefician de diferentes lenguajes o tecnologías. Esta es una de las ventajas más poderosas de los microservicios.
-
 ## ¿Qué son los microservicios?
 
-Organiza la lógica empresarial como una colección de servicios poco acoplados y desplegados individualmente.
+Los microservicios organizan la lógica empresarial como una colección de **servicios poco acoplados y desplegados individualmente**.  
+Cada servicio pertenece a un pequeño equipo y tiene un **ámbito de responsabilidad limitado**.  
 
-Cada servicio pertenece a un pequeño equipo y tiene un ámbito de responsabilidad limitado.
+En otras palabras, en lugar de tener un único monolito gigante, dividís tu aplicación en piezas independientes que pueden evolucionar, escalar y fallar de manera aislada.
+
+### ¿Cuándo Microservicios es la solución correcta?
+
+Microservicios es la solución cuando necesitás resolver problemas de **escalabilidad organizacional y del sistema** que otras arquitecturas no pueden manejar
+
+1. **Escalabilidad organizacional**: Cuando tu equipo crece y necesitás que múltiples equipos trabajen de forma independiente sin pisarse entre sí.  
+2. **Escalabilidad del sistema**: Cuando diferentes partes de tu aplicación tienen distintas necesidades de recursos, tráfico o tecnologías.  
+3. **Independencia de despliegue**: Cuando necesitás desplegar y escalar componentes individuales sin afectar al resto del sistema.  
+4. **Flexibilidad tecnológica**: Cuando diferentes partes de tu aplicación se benefician de distintos lenguajes o tecnologías. Esta es una de las ventajas más poderosas de los microservicios.
 
 ### Beneficios de los microservicios
 
 #### 1. Escalabilidad organizativa mayor
 
-Ya que cada servicio contiene un subconjunto de la funcionalidad global, el codebase de cada servicio es menor. Esto permite que:
+Cada servicio contiene un subconjunto de la funcionalidad global, por lo que el codebase de cada servicio es menor. Esto permite que:
 
-- El código cargue más rápido en un IDE.
-- Sea fácil de testear cada uno y de entender qué hace.
-- El onboarding sea más rápido para engineers que tengan que mantenerlo.
-- Los equipos sean más veloces trabajando en un "solo mundo".
+- El código cargue más rápido en un IDE.  
+- Sea fácil testear cada servicio y entender qué hace.  
+- El onboarding sea más rápido para engineers que lo mantengan.  
+- Los equipos trabajen más rápido en su “mundo propio”.
 
 #### 2. Escalabilidad del sistema más alta
 
-En una arquitectura monolítica cada servidor tiene toda la aplicación y conlleva un costo más alto de mantener. En microservicios:
+En un **monolito**, cada servidor tiene toda la aplicación, lo que conlleva un costo más alto de mantenimiento. En microservicios:
 
-- Cada instancia es mucho más chica, por lo que cada instancia de un microservicio consume menos memoria y CPU, lo cual puede ser corrido por servidores más baratos.
-- Si algún microservicio necesita más recursos, le podés asignar a su contenedor más potencia de CPU o más RAM (escalado vertical).
-- Cada microservicio puede estar implementado con un lenguaje diferente. Ellos pueden refactorizar (o cambiar el lenguaje según necesiten) de manera más eficaz.
-- Mayor estabilidad para todo el sistema: Si algún microservicio falla podemos levantar más instancias de ese rápidamente sin tener que esperar un deploy entero de un codebase gigantesco.
+- Cada instancia es más chica, consume menos memoria y CPU, y puede correrse en servidores más baratos.  
+- Cada microservicio puede ser desarrollado en el lenguaje más adecuado para su dominio, facilitando refactorizaciones o cambios tecnológicos sin afectar al resto.  
+- Mayor estabilidad: si un microservicio falla, podemos levantar más instancias rápidamente sin esperar un deploy de todo el monolito.
 
-**Flexibilidad tecnológica en acción:**
 
-La capacidad de usar diferentes tecnologías no es solo una conveniencia, es una **ventaja competitiva real**:
+#### 3. Flexibilidad tecnológica
 
-**Ejemplo: Servicio de IA en Python vs TypeScript**
+Supongamos que tenés un **RecommendationService** que procesa millones de interacciones de usuarios:
 
-Supongamos que tenés un **RecommendationService** que necesita procesar millones de interacciones de usuarios para generar recomendaciones personalizadas.
+- **Monolito en TypeScript**: limitaciones en ML: librerías más lentas, menos maduras y muchas técnicas avanzadas no disponibles.  
+- **Microservicio en Python**: acceso a TensorFlow, PyTorch, NumPy, Pandas, scikit-learn.  
+**Resultado**: hasta **10-100 veces más rápido** y con funcionalidades que no existen en JavaScript.  
 
-- **En un monolito TypeScript**: Tendrías que usar librerías de JavaScript para ML que son:
-  - Más lentas (JavaScript no está optimizado para computación numérica).
-  - Menos maduras (el ecosistema de ML en JS es pequeño comparado con Python).
-  - Más limitadas (muchas técnicas de ML avanzadas no están disponibles).
+**Clave**: no es solo que “podés usar diferentes lenguajes”, es que **necesitás usar el lenguaje correcto** para cada dominio específico.
 
-- **En un microservicio Python**: Podés usar:
-  - TensorFlow o PyTorch (las librerías más potentes de ML del mundo).
-  - NumPy (optimizado en C, **mucho más rápido** que cualquier equivalente en JS).
-  - Pandas (el estándar de la industria para análisis de datos).
-  - scikit-learn (cientos de algoritmos de ML listos para usar).
+**Nota práctica**: normalmente varios microservicios corren como contenedores en el mismo servidor. Cada microservicio puede tener **límites de CPU y memoria distintos** según lo necesite: uno con 2GB de RAM, otro con 4GB, y así sucesivamente. Esto permite ajustar los recursos de manera fina y eficiente sin repetir lo que ya explicamos sobre escalabilidad.
 
-**Resultado**: El servicio en Python puede ser **10-100 veces más rápido** para tareas de ML que el equivalente en TypeScript, y además tenés acceso a funcionalidades que simplemente no existen en JavaScript.
-
-**Otro ejemplo: Servicio de alta performance en Go**
-
-Un **PaymentService** que procesa transacciones necesita:
-- Baja latencia (< 10ms).
-- Alto throughput (millones de transacciones por segundo).
-- Uso eficiente de memoria.
-
-- **En un monolito TypeScript**: Node.js tiene limitaciones:
-  - El event loop puede tener problemas con operaciones CPU-intensivas.
-  - Mayor consumo de memoria.
-  - Menor rendimiento en operaciones concurrentes.
-
-- **En un microservicio Go**: Podés lograr:
-  - Latencia ultra-baja (Go compila a código nativo).
-  - Concurrencia extremadamente eficiente con goroutines.
-  - Bajo consumo de memoria.
-  - **2-5 veces mejor rendimiento** que Node.js para este tipo de cargas.
-
-**La clave**: No es solo que "podés usar diferentes lenguajes", es que **necesitás diferentes lenguajes** para construir sistemas que realmente performen bien en cada dominio específico.
-
-**Importante**: En Microservicios, normalmente metés en un mismo servidor varios contenedores (microservicios), y podés escalar cada uno verticalmente según necesites. A un microservicio le podés asignar 2GB de RAM, al otro 4GB, y así sucesivamente.
 
 ### Desafíos de los microservicios
 
-Los microservicios no son una solución mágica. Traen sus propios desafíos:
+Los microservicios no son una solución mágica. Traen sus propios desafíos
 
 #### 1. Sistema distribuido
-
 Los microservicios son un gran sistema distribuido. En la arquitectura monolítica tenemos un comportamiento, éxito y rendimiento predecible pues cuando llamamos a algo que está dentro del mismo sistema es sencillo de trackear.
 
 En los microservicios esto no sucede, el comportamiento, éxito y rendimiento no es tan predecible porque la comunicación es entre computadoras diferentes. Suele haber latencia, pérdida de paquetes o inclusive errores.
 
 #### 2. Testing
-
 No hay garantía de que cuando todos los servicios estén en producción funcionen entre ellos (integration tests). Lo complicado es saber qué microservicio es el responsable de hacer esos tests de integración.
 
 #### 3. Dificultad de monitorear rendimiento y bugs
-
 Si un cliente hizo una solicitud para hacer X cosa pero esa X cosa necesita comunicarse con 10 microservicios para responder es muy difícil de trackear qué sucede si algo falla.
 
 Puede suceder que:
@@ -224,17 +186,14 @@ Puede suceder que:
 - La información demore demasiado tiempo.
 
 #### 4. Dificultad en la separación de responsabilidades
-
 Si las responsabilidades de los microservicios están mal distribuidas podemos tener problemas organizacionales. Si un cambio en un microservicio conlleva a hablar con otros equipos hay algo raro (cada equipo debería funcionar por sí solo).
 
 **Importante**: Si estos puntos no se tienen en cuenta, en vez de armar una arquitectura de microservicios habremos construido un "monolito distribuido".
 
 ## Comunicación entre microservicios
-
 Existen **dos modelos principales de comunicación entre microservicios**, que se diferencian principalmente por si el emisor espera o no una respuesta inmediata.
 
 ### Request-Response Model
-
 Es el **modelo síncrono**, donde un servicio realiza una petición (generalmente HTTP) a otro servicio y **espera la respuesta** para continuar su ejecución.
 
 **Características:**
@@ -254,7 +213,6 @@ Es el **modelo síncrono**, donde un servicio realiza una petición (generalment
 
 
 ### Event-Driven Architecture
-
 Este modelo se basa en una **comunicación asíncrona orientada a eventos**.  
 Un servicio publica un evento y uno o más servicios reaccionan a él, sin que exista una llamada directa entre ellos.
 
@@ -266,14 +224,13 @@ Es un enfoque muy común en arquitecturas de microservicios, ya que permite **ma
 - **Loose Coupling:** los servicios están desacoplados tanto a nivel estructural como temporal.
 - **Uno a muchos:** un mismo evento puede ser consumido por múltiples *Consumers*.
 
-**Ventajas sobre Request–Response:**
+**Ventajas sobre Request-Response:**
 1. El Producer puede continuar procesando su siguiente tarea en lugar de esperar una respuesta que tal vez no necesita.
 2. El Producer no necesita conocer todos los servicios que consumirán el evento.
 3. Se logra un **mayor desacoplamiento** entre servicios, facilitando la escalabilidad y la evolución del sistema.
 
 
 ### ¿Cuándo usar cada uno?
-
 En la práctica, una arquitectura de microservicios **no elige uno u otro**, sino que **combina ambos modelos**:
 
 1. **Event-Driven Architecture**
@@ -290,27 +247,22 @@ Una buena regla general es:
 
 
 ## Casos de uso para Event-Driven Architecture
-
 ### 1. Fire and Forget
-
 Se utiliza cuando el cliente **no espera una respuesta**, o bien **no necesita que la respuesta sea inmediata**.
 
 **Ejemplos:**
 - **Respuesta no inmediata:** generar un reporte pesado cuyo tiempo de procesamiento es desconocido. El sistema inicia el proceso y notifica al usuario cuando el reporte está listo.
 - **Sin respuesta:** cuando un usuario deja una reseña en un producto. Al usuario solo le importa que la acción se haya registrado, no recibir una confirmación posterior.
 
-
 ### 2. Entrega confiable
 
 Aplica cuando **no nos podemos permitir perder eventos o acciones**.
-
 **Ejemplos:**
 - En transacciones financieras, ningún mensaje puede perderse.
 - Si un usuario paga un producto pero el servicio de entregas no es notificado debido a una caída, el sistema debe **reintentar el envío del evento** hasta garantizar que sea recibido.
 
 
 ### 3. Flujo continuo de eventos (alta frecuencia)
-
 En escenarios como ubicación en tiempo real o datos de sensores, se generan **grandes volúmenes de eventos por segundo**, por lo que no es viable bloquear ni procesar cada evento inmediatamente.
 
 **Enfoque:**
@@ -319,7 +271,6 @@ En escenarios como ubicación en tiempo real o datos de sensores, se generan **g
 - Procesarlos posteriormente para análisis o agregación.
 
 ### 4. Detección de anomalías y reconocimiento de patrones
-
 Los eventos permiten **monitorear el comportamiento del sistema**.
 
 **Ejemplo:**
@@ -327,7 +278,6 @@ Los eventos permiten **monitorear el comportamiento del sistema**.
 
 
 ### 5. Broadcasting
-
 Se utiliza cuando un evento debe ser **difundido a múltiples servicios**, sin que el cliente que originó la acción tenga conocimiento de los efectos secundarios.
 
 **Ejemplo:**
@@ -335,7 +285,6 @@ Se utiliza cuando un evento debe ser **difundido a múltiples servicios**, sin q
 
 
 ### 6. Buffering
-
 Permite **absorber picos de tráfico** mediante un message broker, evitando sobrecargar los servicios consumidores.
 
 **Ejemplo:**
@@ -347,7 +296,6 @@ Permite **absorber picos de tráfico** mediante un message broker, evitando sobr
 Este enfoque garantiza que los eventos no se pierdan y que los servicios no colapsen ante picos de demanda.
 
 ## Patrones de Event-Driven architecture
-
 ### Event-Streaming
 
 En este patrón, el message-broker es utilizado como almacenamiento temporal o permanente para eventos.
@@ -360,7 +308,6 @@ Este patrón es una gran elección para los siguientes casos de uso:
 2. **Pattern / Anomaly detection**: Pues el consumer necesita acceso a todos los eventos pasados en una ventana concreta.
 
 ### Pub/Sub
-
 En este patrón, los Consumers se suscriben a una queue particular o canal para recibir nuevos eventos luego de subscribirse.
 
 En este caso, los subscriptores **no tienen acceso a eventos viejos**, y tan pronto como los subscriptores actuales reciben el evento, el message-broker lo borrará de su queue.
@@ -374,7 +321,6 @@ Este patrón es una gran elección para los siguientes casos de uso:
 5. Infinite stream of events
 
 ## Semántica de entrega de mensajes
-
 Existen tres tipos de semántica de entrega:
 
 ### At Most Once
