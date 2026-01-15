@@ -1,7 +1,7 @@
 ---
-title: 'Microservicios y Arquitectura Event-Driven'
+title: 'Microservicios en la práctica: problemas reales y cómo resolverlos'
 publishedAt: '2026-01-15'
-summary: '¿Qué son los microservicios? ¿Por qué migrar de un monolito? ¿Cómo funciona la arquitectura dirigida por eventos?'
+summary: 'Exploro cómo una arquitectura de microservicios evoluciona a partir de problemas reales: comunicación, eventos, escalabilidad, consistencia distribuida, Saga y observabilidad.'
 ---
 ## ¿Qué vas a aprender acá?
 Todo lo relacionado a Microservicios y Arquitectura Event-Driven. Desde la motivación para usarlos, los problemas que resuelven, hasta cómo implementarlos correctamente.
@@ -405,7 +405,7 @@ Si un cliente tuviera que comunicarse directamente con cada microservicio, surgi
 
 Esto genera un **alto acoplamiento entre el cliente y la arquitectura interna**, algo que va en contra del espíritu de los microservicios.
 
-### API Gateway
+####  API Gateway
 
 Para resolver este problema, se introduce un **API Gateway**.
 
@@ -438,7 +438,7 @@ Si un servicio comienza a recibir una gran cantidad de requests:
 
 La solución es **escalar horizontalmente**, levantando múltiples instancias del mismo microservicio.
 
-### Load Balancer
+#### Load Balancer
 
 Para distribuir el tráfico entre múltiples instancias, se utiliza un **Load Balancer**.
 
@@ -457,6 +457,143 @@ Para distribuir el tráfico entre múltiples instancias, se utiliza un **Load Ba
 <strong>Importante</strong>: En arquitecturas de microservicios, no solo importa **cómo se comunican los servicios entre sí**, sino también **cómo acceden los clientes** y **cómo escala el sistema ante el tráfico**.
 
 El **API Gateway** resuelve el problema de acceso y desacoplamiento del cliente, mientras que el **Load Balancer** permite escalar y distribuir carga de forma eficiente.
+
+### Consistencia distribuida
+En una arquitectura monolítica, la consistencia suele ser un problema resuelto:
+- una única base de datos,
+- una única transacción,
+- commit o rollback.
+
+En una arquitectura de microservicios, **esto deja de ser cierto**.
+
+Cada microservicio:
+- tiene su propia base de datos,
+- maneja su propio estado,
+- se despliega de manera independiente.
+
+Esto implica que **no existe una transacción global** que garantice que todos los cambios ocurran juntos.
+
+#### El problema
+
+Cuando una operación involucra múltiples microservicios, pueden ocurrir **fallos parciales**.
+
+**Ejemplo:**
+1. Se crea una orden.
+2. Se reserva stock.
+3. Se procesa el pago.
+4. Se coordina el envío.
+
+¿Qué pasa si el pago falla luego de haber reservado stock?  
+¿O si el envío falla después de cobrar?
+
+El sistema puede quedar en un **estado inconsistente**, donde algunas acciones se completaron y otras no.
+
+#### Consistencia eventual
+
+En microservicios, el enfoque cambia:
+El sistema no siempre está consistente en todo momento,  pero **eventualmente llega a un estado consistente**.
+
+Esto significa aceptar que:
+- los datos pueden estar temporalmente desincronizados,
+- distintos servicios pueden ver distintos estados del sistema,
+- la consistencia fuerte es la excepción, no la regla.
+
+Este cambio de paradigma es clave para entender por qué aparecen patrones como Saga.
+
+#### Patrón Saga
+
+El **patrón Saga** surge como una solución al problema de la consistencia distribuida.
+
+Una Saga modela una operación larga como una **secuencia de pasos**:
+- cada paso es una transacción local,
+- cada transacción tiene una **acción compensatoria** asociada.
+
+#### ¿Cómo funciona una Saga?
+
+Si todos los pasos se completan, la operación finaliza con éxito.  
+Si algún paso falla, se ejecutan las acciones compensatorias para **deshacer los efectos previos**.
+
+**Ejemplo simplificado:**
+1. Crear orden  
+   ↳ compensación: cancelar orden
+2. Reservar stock  
+   ↳ compensación: liberar stock
+3. Procesar pago  
+   ↳ compensación: reembolsar pago
+
+De esta forma, el sistema puede volver a un estado consistente sin necesidad de locks globales.
+
+#### Tipos de Saga
+
+##### Saga basada en Choreography
+- No hay un coordinador central.
+- Los servicios reaccionan a eventos.
+- Cada servicio decide cuál es el próximo paso.
+
+**Ventajas:**
+- Mayor desacoplamiento.
+- Arquitectura más distribuida.
+
+**Desventajas:**
+- Flujo difícil de seguir.
+- Debugging complejo a gran escala.
+
+
+##### Saga basada en Orchestration
+- Existe un **orquestador** que controla el flujo.
+- El orquestador decide qué servicio ejecutar y cuándo.
+
+**Ventajas:**
+- Flujo explícito y fácil de entender.
+- Mejor control de errores.
+
+**Desventajas:**
+- Mayor acoplamiento.
+- El orquestador puede convertirse en un punto crítico.
+
+
+#### Tradeoffs del patrón Saga
+
+- Mayor complejidad conceptual.
+- Consistencia eventual en lugar de fuerte.
+- Debugging más difícil.
+- Necesidad de idempotencia y retries bien definidos.
+
+### Observabilidad 
+A medida que el sistema crece, aparece uno de los problemas más duros de los microservicios:
+
+El sistema falla, pero no sabés dónde ni por qué.
+
+Un request puede atravesar:
+- un API Gateway,
+- varios microservicios,
+- múltiples colas y eventos.
+
+Los logs locales ya no alcanzan.
+
+La observabilidad es la capacidad de **entender qué está pasando dentro del sistema**, solo a partir de sus outputs.
+
+Nos apoyamos en tres pilares fundamentales 
+
+#### Logging distribuido
+- Logs centralizados.
+- Cada request tiene un **correlation ID**.
+- Permite reconstruir el recorrido de una request.
+
+#### Métricas 
+- Latencia.
+- Throughput.
+- Error rate.
+- Uso de recursos.
+
+#### Tracing distribuido
+- Permite seguir una request a través de múltiples servicios.
+- Cada salto queda registrado como un *span* dentro de un *trace*.
+
+Esto es fundamental para:
+- identificar cuellos de botella,
+- entender dependencias,
+- debuggear fallos complejos.
 
 ## Preguntas frecuentes
 
