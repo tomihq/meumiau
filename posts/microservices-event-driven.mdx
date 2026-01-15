@@ -3,8 +3,20 @@ title: 'Microservicios en la práctica: problemas reales y cómo resolverlos'
 publishedAt: '2026-01-15'
 summary: 'Exploro cómo una arquitectura de microservicios evoluciona a partir de problemas reales: comunicación, eventos, escalabilidad, consistencia distribuida, Saga y observabilidad.'
 ---
+
 ## ¿Qué vas a aprender acá?
-Todo lo relacionado a Microservicios y Arquitectura Event-Driven. Desde la motivación para usarlos, los problemas que resuelven, hasta cómo implementarlos correctamente.
+
+Al terminar este post vas a entender:
+- **Cuándo tiene sentido pasar de un monolito a microservicios** y qué problemas aparecen cuando lo hacés.
+- **Cómo se comunican los microservicios** (Request-Response vs Event-Driven) y cuándo elegir cada modelo.
+- **Qué problemas reales resuelve una arquitectura Event-Driven** y en qué escenarios es una mala idea.
+- **Cómo escalar un sistema de microservicios** usando API Gateway, Load Balancers y Service Discovery.
+- **Por qué la consistencia es un problema distribuido** y cómo abordarla sin transacciones globales.
+- **Cómo funciona el patrón Saga**, cuándo usarlo y qué tradeoffs introduce.
+- **Cómo evolucionar APIs sin romper consumidores**, usando versionado y backward compatibility.
+- **Por qué la observabilidad es obligatoria** en microservicios y cómo entender qué está pasando cuando algo falla.
+
+Este no es un post de definiciones, sino un recorrido por **problemas reales y soluciones prácticas** que aparecen cuando un sistema crece.
 
 ## Conceptos importantes antes de empezar
 
@@ -454,9 +466,91 @@ Para distribuir el tráfico entre múltiples instancias, se utiliza un **Load Ba
 
 **Flujo típico**: Cliente → API Gateway → Load Balancer → Instancias del Microservicio
 
-<strong>Importante</strong>: En arquitecturas de microservicios, no solo importa **cómo se comunican los servicios entre sí**, sino también **cómo acceden los clientes** y **cómo escala el sistema ante el tráfico**.
+**Importante**: En arquitecturas de microservicios, no solo importa **cómo se comunican los servicios entre sí**, sino también **cómo acceden los clientes** y **cómo escala el sistema ante el tráfico**.
 
 El **API Gateway** resuelve el problema de acceso y desacoplamiento del cliente, mientras que el **Load Balancer** permite escalar y distribuir carga de forma eficiente.
+
+### Versionado y Backward Compatibility
+
+En una arquitectura de microservicios, los servicios **evolucionan de manera independiente**.  
+Esto implica que no todos se deployan al mismo tiempo ni consumen la misma versión de una API.
+
+#### La problemática
+
+A diferencia de un monolito:
+- no existe un deploy único,
+- no se puede asumir que todos los consumidores se actualizan al mismo tiempo,
+- requests “viejos” pueden seguir llegando durante semanas o meses.
+
+Esto genera varios riesgos:
+- romper consumidores existentes,
+- generar fallos difíciles de detectar,
+- forzar deploys coordinados (volviendo al acoplamiento del monolito).
+
+Un cambio incompatible en una API puede provocar **caídas en cadena**, incluso si el servicio que cambió funciona correctamente por sí solo.
+
+
+#### La solución: Versionado y compatibilidad hacia atrás
+
+Para evitar estos problemas, las APIs deben diseñarse con **backward compatibility** como regla.
+
+Esto implica:
+- evitar cambios breaking en endpoints existentes *(la cantidad de veces que sufrí con esto)*,
+- agregar campos en lugar de modificar o eliminar los actuales,
+- tolerar datos desconocidos o faltantes.
+
+Cuando un cambio incompatible es inevitable, se introduce **versionado explícito**.
+
+**Ejemplos comunes de versionado:**
+- Versionado en la URL: **/v1/orders**, **/v2/orders**
+- Versionado por headers
+- Versionado gestionado desde el API Gateway
+
+La idea central es simple: Un servicio debe poder evolucionar sin romper a quienes todavía no se actualizaron.
+
+## Service Discovery
+
+En microservicios, los servicios no son entidades estáticas:
+- las instancias escalan,
+- se reinician,
+- cambian de IP,
+- aparecen y desaparecen dinámicamente.
+
+Esto vuelve impracticable cualquier forma de configuración estática.
+
+### La problemática
+
+Si un servicio necesita comunicarse con otro:
+- ¿a qué IP se conecta?
+- ¿qué pasa si esa instancia cae?
+- ¿cómo sabe cuántas instancias existen en ese momento?
+
+Hardcodear direcciones o URLs:
+- no escala,
+- es frágil,
+- rompe con el principio de despliegue independiente.
+
+A medida que el sistema crece, esta estrategia se vuelve **insostenible**.
+
+### La solución: Service Discovery
+
+El **Service Discovery** permite que los servicios se encuentren dinámicamente entre sí.
+
+El flujo general es:
+1. Cada instancia se registra en un **service registry** al iniciar.
+2. Los clientes consultan el registry para descubrir instancias disponibles.
+3. El tráfico se enruta solo a instancias saludables.
+
+Este mecanismo permite:
+- escalar servicios sin cambiar configuraciones,
+- tolerar fallos de instancias individuales,
+- mantener la comunicación desacoplada de la infraestructura.
+
+En plataformas modernas, como Kubernetes, el service discovery suele estar integrado:
+- DNS interno,
+- objetos **Service**,
+- balanceo automático.
+
 
 ### Consistencia distribuida
 En una arquitectura monolítica, la consistencia suele ser un problema resuelto:
@@ -595,21 +689,3 @@ Esto es fundamental para:
 - entender dependencias,
 - debuggear fallos complejos.
 
-## Preguntas frecuentes
-
-1. **¿Cuándo debería migrar de un monolito a microservicios?**
-   - Cuando tu equipo crece más allá del "equipo de 2 pizzas".
-   - Cuando empiezas a tener problemas de escalabilidad organizacional o del sistema.
-   - Cuando diferentes partes de tu aplicación tienen diferentes necesidades de escalado o tecnologías.
-
-2. **¿Los microservicios siempre son mejores que un monolito?**
-   - No. Si tu equipo es pequeño y tu aplicación no es compleja, un monolito puede ser la mejor opción. Muchas organizaciones implementan microservicios mal y terminan con un "monolito distribuido".
-
-3. **¿Debo usar solo Event-Driven Architecture o solo Request-Response?**
-   - En la realidad, una arquitectura de Microservicios combina ambos. Es mejor empezar con request-response y migrar a event-driven cuando sea necesario.
-
-4. **¿Cuál es la diferencia entre Event Streaming y Pub/Sub?**
-   - En Event Streaming, los consumers tienen acceso a eventos viejos. En Pub/Sub, los consumers solo reciben notificaciones sobre nuevos eventos a medida que llegan.
-
-5. **¿Qué es un "monolito distribuido"?**
-   - Es cuando implementas microservicios pero las responsabilidades están mal distribuidas, los servicios están muy acoplados, y necesitas coordinar cambios entre múltiples equipos. Terminas con los problemas de un monolito pero con la complejidad adicional de un sistema distribuido.
