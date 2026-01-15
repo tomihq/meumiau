@@ -1,0 +1,287 @@
+---
+title: 'Microservicios y Arquitectura Event-Driven'
+publishedAt: '2026-01-15'
+summary: '¿Qué son los microservicios? ¿Por qué migrar de un monolito? ¿Cómo funciona la arquitectura dirigida por eventos?'
+---
+
+## ¿Qué vas a aprender acá?
+Todo lo relacionado a Microservicios y Arquitectura Event-Driven. Desde la motivación para usarlos, los problemas que resuelven, hasta cómo implementarlos correctamente.
+
+Este post se enfoca en los conceptos fundamentales y la teoría. Los posts siguientes cubrirán aspectos prácticos como migración, testing, deployment y troubleshooting.
+
+## Conceptos Importantes antes de empezar
+
+### Monolito
+Una aplicación monolítica es aquella donde toda la lógica de negocio, el backend y el manejo de la base de datos están en una misma aplicación (arquitectura de tres niveles).
+
+### Microservicio
+Un microservicio es un servicio independiente que tiene su propia responsabilidad y puede ser desplegado de forma individual. El sistema completo se organiza como una colección de estos servicios poco acoplados.
+
+### Event-Driven Architecture
+Arquitectura dirigida por eventos que establece comunicación asíncrona basada en eventos entre microservicios, permitiendo mayor desacoplamiento y escalabilidad.
+
+Sabiendo estas definiciones podemos empezar.
+
+## Motivación: ¿Por qué Microservicios?
+
+Los microservicios son la arquitectura más moderna, actual y popular en la industria. Este tipo de arquitectura es fundamental en muchas empresas grandes como Amazon, Google, Netflix, Meta, Uber, Airbnb, etc.
+
+Cuando los microservicios se implementan bien, permiten a las organizaciones:
+
+1. **Escalar rápidamente**: Tanto a nivel organizacional como del sistema.
+2. **Alcanzar millones de usuarios**: Con la capacidad de escalar componentes específicos según necesidad.
+3. **Mantener bajos los costos operacionales**: Al poder optimizar recursos por servicio.
+4. **Ser eficientes e innovar**: Permitiendo que equipos trabajen de forma independiente.
+
+**Importante**: La idea de usar microservicios y escalar rápido puede ser motivador, pero muchas organizaciones los implementan mal y deshacen la decisión de migrar. Si se aplican bien (y en el momento adecuado) pueden ser muy beneficiosos.
+
+Hay un dicho que dice que si tu equipo puede ser alimentado por 2 pizzas, entonces podés seguir usando arquitectura monolítica. Esto nos da una idea de cuándo considerar migrar a microservicios.
+
+## Problema: Las Limitaciones de la Arquitectura Monolítica
+
+En una aplicación monolítica, la lógica de negocio, el desarrollo del backend y el manejo de la base de datos está en una misma aplicación.
+
+Este tipo de arquitectura tiene muchos beneficios y es por eso que hoy en día se sigue utilizando, especialmente en startups y equipos pequeños.
+
+### Beneficios del Monolito
+
+1. **Fáciles de diseñar**: Se acopla a cualquier sistema web, sea cual sea el tipo del negocio.
+2. **Fácil de implementar**: Los desarrolladores no tienen que romperse la cabeza. Usan tecnologías que conocen y podemos tener fácilmente un sistema funcional.
+
+### Desventajas del Monolito
+
+Sin embargo, a medida que el sistema crece, aparecen problemas significativos:
+
+#### 1. Poca Escalabilidad Organizacional
+
+Al haber tantos desarrolladores en un mismo codebase, se hace común ver problemas de MRs (Merge Requests), muchos conflictos. Se pisan unos con otros.
+
+Cuando el equipo crece, la coordinación se vuelve cada vez más difícil y costosa.
+
+#### 2. Código Complejo
+
+A medida que agregamos código y código, se hace más grande y complejo. Esto produce que:
+
+- Sea más difícil de razonar sobre el código.
+- El IDE tarda más en cargar.
+- Es más lento para buildear y testear.
+- Más riesgos para deploy.
+- Hay features más largas y menos deploys.
+- El onboarding a nuevos desarrolladores es complejo.
+
+#### 3. Poca Escalabilidad del Sistema
+
+Cada instancia de aplicación que contiene toda la lógica requiere más CPU y memoria. Tenemos que correr cada instancia en computadoras más caras.
+
+También es más difícil de migrar algunas tecnologías viejas. Cualquier bug pequeño o de rendimiento afecta a toda la aplicación y nos obliga a hacer un redeploy entero (o rollbacks).
+
+#### 4. Estamos Atados a un Mismo Lenguaje y Tecnologías
+
+Esto no suele ser bueno porque hay algunos procesos que requieren de otros paradigmas o incluso lenguajes que performan mucho mejor para una tarea dada.
+
+Por ejemplo, un servicio de procesamiento de imágenes podría beneficiarse de Python con librerías especializadas, mientras que un servicio de alta performance podría necesitar Go o Rust.
+
+## Solución: Arquitectura de Microservicios
+
+### ¿Qué son los Microservicios?
+
+Organiza la lógica empresarial como una colección de servicios poco acoplados y desplegados individualmente.
+
+Cada servicio pertenece a un pequeño equipo y tiene un ámbito de responsabilidad limitado.
+
+### Beneficios de los Microservicios
+
+#### 1. Escalabilidad Organizativa Mayor
+
+Ya que cada servicio contiene un subconjunto de la funcionalidad global, el codebase de cada servicio es menor. Esto permite que:
+
+- El código cargue más rápido en un IDE.
+- Sea fácil de testear cada uno y de entender qué hace.
+- El onboarding sea más rápido para engineers que tengan que mantenerlo.
+- Los equipos sean más veloces trabajando en un "solo mundo".
+
+#### 2. Escalabilidad del Sistema Más Alta
+
+En una arquitectura monolítica cada servidor tiene toda la aplicación y conlleva un costo más alto de mantener. En microservicios:
+
+- Cada instancia es mucho más chica, por lo que cada instancia de un microservicio consume menos memoria y CPU, lo cual puede ser corrido por servidores más baratos.
+- Si algún microservicio necesita más recursos, le podés asignar a su contenedor más potencia de CPU o más RAM (escalado vertical).
+- Cada microservicio puede estar implementado con un lenguaje diferente. Ellos pueden refactorizar (o cambiar el lenguaje según necesiten) de manera más eficaz.
+- Mayor estabilidad para todo el sistema: Si algún microservicio falla podemos levantar más instancias de ese rápidamente sin tener que esperar un deploy entero de un codebase gigantesco.
+
+**Importante**: En Microservicios, normalmente metés en un mismo servidor varios contenedores (microservicios), y podés escalar cada uno verticalmente según necesites. A un microservicio le podés asignar 2GB de RAM, al otro 4GB, y así sucesivamente.
+
+### Desafíos de los Microservicios
+
+Los microservicios no son una solución mágica. Traen sus propios desafíos:
+
+#### 1. Sistema Distribuido
+
+Los microservicios son un gran sistema distribuido. En la arquitectura monolítica tenemos un comportamiento, éxito y rendimiento predecible pues cuando llamamos a algo que está dentro del mismo sistema es sencillo de trackear.
+
+En los microservicios esto no sucede, el comportamiento, éxito y rendimiento no es tan predecible porque la comunicación es entre computadoras diferentes. Suele haber latencia, pérdida de paquetes o inclusive errores.
+
+#### 2. Testing
+
+No hay garantía de que cuando todos los servicios estén en producción funcionen entre ellos (integration tests). Lo complicado es saber qué microservicio es el responsable de hacer esos tests de integración.
+
+#### 3. Dificultad de Monitorear Rendimiento y Bugs
+
+Si un cliente hizo una solicitud para hacer X cosa pero esa X cosa necesita comunicarse con 10 microservicios para responder es muy difícil de trackear qué sucede si algo falla.
+
+Puede suceder que:
+- La información no llegue.
+- La información sea incorrecta.
+- La información demore demasiado tiempo.
+
+#### 4. Dificultad en la Separación de Responsabilidades
+
+Si las responsabilidades de los microservicios están mal distribuidas podemos tener problemas organizacionales. Si un cambio en un microservicio conlleva a hablar con otros equipos hay algo raro (cada equipo debería funcionar por sí solo).
+
+**Importante**: Si estos puntos no se tienen en cuenta, en vez de armar una arquitectura de microservicios habremos construido un "monolito distribuido".
+
+## Comunicación entre Microservicios
+
+Existen dos modelos principales de comunicación entre microservicios:
+
+### Request-Response Model
+
+Es el modelo síncrono donde un servicio hace una petición HTTP y espera una respuesta.
+
+**Características:**
+- Comunicación síncrona: El Sender manda una petición y tiene que esperar que el Receiver responda.
+- Si la respuesta nunca llega, se queda colgado.
+- El Sender necesita saber exactamente quién va a recibir la petición y cómo.
+
+**Casos de uso:**
+- Cuando el usuario quiere la respuesta YA (ej.: cargar productos en una tienda antes de ingresar a la página).
+- Cuando la interacción es tan simple que no necesitamos un modelo Event-Driven (por el costo de mantener un Message-Broker).
+
+### Event-Driven Architecture
+
+Comúnmente se usa con la arquitectura de Microservicios estableciendo una comunicación asíncrona basada en eventos entre microservicios, lo cual nos permite conseguir un desacoplamiento aún mayor y una mayor escalabilidad.
+
+**Características:**
+- Comunicación asíncrona: El Producer no espera ninguna respuesta del Consumer ni tampoco de los Consumers del evento.
+- Inversion of Control: Al Producer no le interesa y puede que ni siquiera conozca a aquellos servicios que van a consumir el evento.
+- Loose Coupling: Esta es la razón por la cual la Event-Driven Architecture va tan de la mano con la arquitectura de microservicios.
+
+**Ventajas sobre Request-Response:**
+1. El Producer puede pasar a procesar su siguiente tarea en lugar de esperar una respuesta que capaz quizá no necesita.
+2. El Producer no necesita conocer todos los servicios que consumirán el evento.
+3. Mayor desacoplamiento entre servicios.
+
+### ¿Cuándo usar cada uno?
+
+En la realidad, una arquitectura de Microservicios combina:
+
+1. **Event-Driven Architecture**
+2. **Synchronous request-response model**
+
+Es mejor:
+
+1. Empezar con un request-response model.
+2. Upgrade a event-driven architecture cuando **solo sea necesario**.
+
+## Casos de Uso para Event-Driven Architecture
+
+### 1. Fire and Forget
+
+En casos donde el cliente no espera una respuesta o no espera una respuesta inmediata.
+
+**Ejemplos:**
+- **Esperás respuesta (no inmediata)**: Cuando querés generar un reporte pesado que no sabés cuánto va a demorar. La idea es que lo generes y le mandes una notificación al usuario cuando el proceso haya terminado.
+- **No esperás respuesta**: Cuando un usuario deja una review en un producto por ejemplo, al usuario no le importa que le notifiquemos cuando haya dejado la review, sino solamente dejarla.
+
+### 2. Entrega Confiable
+
+Cuando no nos podemos permitir no recibir una acción.
+
+**Ejemplos:**
+- En transacciones financieras no podemos perder ningún mensaje.
+- Si una persona pagó un producto pero no notificamos al servicio de entregas porque se cayó, no podemos permitirnos no saber qué eso sucedió. De alguna manera tenemos que seguir enviándolo infinitamente hasta que se reciba.
+
+### 3. Entrega Infinita de Eventos
+
+En información de ubicación de tiempo real o de sensores, mandamos tanta información cada milisegundo que no podemos permitir bloquearnos. Ni siquiera nuestro sistema debería ponerse a pensar qué hacer, ni tampoco procesarlos. Solamente deberíamos recibirlos y encolarlos para un posterior análisis.
+
+### 4. Detección de Anomalías o Reconocimiento de Patrones
+
+Si el broker no está recibiendo mensajes algún problema con los Producers está habiendo.
+
+### 5. Broadcasting
+
+Cuando queremos enviar la noticia de que un cliente hizo X a otros servicios, pero ese cliente ni siquiera se enteró de que efectos secundarios acaba de producir. Esto se suele usar en publicidades de sitios web para cobrar.
+
+**Ejemplo**: Cuando recibiste un click, tu AdService a través de un MessageBroker le comunica a los demás servicios lo que sucedió pero el cliente ni se enteró.
+
+### 6. Buffering
+
+Podemos tolerar una masiva cantidad de eventos viniendo de un único servicio poniendo un message-broker y comunicar asíncronamente los servicios.
+
+**Ejemplo**: Si tenés una red social, y un post se hace super viral a tal manera que responden 1 millón de personas a la vez, en vez de hacer la recepción y mandar directo a PostsService y CommentsService de un saque ponés en el medio un Message Broker para recibir todos esos mensajes y poder ir derivando a los servicios a medida que pueden procesarlos. Esto te permite recibir todos los mensajes pero no sobrecargar los servicios.
+
+## Patrones de Event-Driven Architecture
+
+### Event-Streaming
+
+En este patrón, el message-broker es utilizado como almacenamiento temporal o permanente para eventos.
+
+Los consumers tienen full-access a los logs de esos eventos, incluso si ya fueron consumidos por el mismo consumer o por otros.
+
+Este patrón es una gran elección para los siguientes casos de uso:
+
+1. **Reliable delivery (entrega segura)**: Debido a que el message-broker o bien tiene los eventos indefinidamente o bien los tiene durante un largo periodo de tiempo tal que nos permite acceder a esos eventos y auditarlos si fuese necesario.
+2. **Pattern / Anomaly detection**: Pues el consumer necesita acceso a todos los eventos pasados en una ventana concreta.
+
+### Pub/Sub
+
+En este patrón, los Consumers se suscriben a una queue particular o canal para recibir nuevos eventos luego de subscribirse.
+
+En este caso, los subscriptores **no tienen acceso a eventos viejos**, y tan pronto como los subscriptores actuales reciben el evento, el message-broker lo borrará de su queue.
+
+Este patrón es una gran elección para los siguientes casos de uso:
+
+1. El message broker está siendo utilizado como un almacenamiento temporal o como mecanismo de broadcasting: Luego de que los suscriptores consumen los eventos, estos típicamente son transformados y almacenados permanentemente en una base de datos o son pasados a otro servicio.
+2. Fire and Forget
+3. Broadcasting
+4. Buffering
+5. Infinite stream of events
+
+## Semántica de Entrega de Mensajes
+
+Existen tres tipos de semántica de entrega:
+
+### At Most Once
+El mensaje se entrega cero o una vez. Puede perderse, pero nunca se duplica.
+
+**Casos de uso**: Información que no es crítica si se pierde (ej.: actualizaciones de ubicación en tiempo real de un dispositivo IoT).
+
+### At Least Once
+El mensaje se entrega al menos una vez. Puede duplicarse, pero nunca se pierde.
+
+**Casos de uso**: Eventos críticos que no podemos permitirnos perder (ej.: notificaciones de mal funcionamiento de un dispositivo).
+
+### Exactly Once
+El mensaje se entrega exactamente una vez. No se pierde ni se duplica.
+
+**Casos de uso**: Transacciones financieras donde debemos procesar el pago una y solo una vez.
+
+## Preguntas Frecuentes
+
+1. **¿Cuándo debería migrar de un monolito a microservicios?**
+   - Cuando tu equipo crece más allá del "equipo de 2 pizzas".
+   - Cuando empiezas a tener problemas de escalabilidad organizacional o del sistema.
+   - Cuando diferentes partes de tu aplicación tienen diferentes necesidades de escalado o tecnologías.
+
+2. **¿Los microservicios siempre son mejores que un monolito?**
+   - No. Si tu equipo es pequeño y tu aplicación no es compleja, un monolito puede ser la mejor opción. Muchas organizaciones implementan microservicios mal y terminan con un "monolito distribuido".
+
+3. **¿Debo usar solo Event-Driven Architecture o solo Request-Response?**
+   - En la realidad, una arquitectura de Microservicios combina ambos. Es mejor empezar con request-response y migrar a event-driven cuando sea necesario.
+
+4. **¿Cuál es la diferencia entre Event Streaming y Pub/Sub?**
+   - En Event Streaming, los consumers tienen acceso a eventos viejos. En Pub/Sub, los consumers solo reciben notificaciones sobre nuevos eventos a medida que llegan.
+
+5. **¿Qué es un "monolito distribuido"?**
+   - Es cuando implementas microservicios pero las responsabilidades están mal distribuidas, los servicios están muy acoplados, y necesitas coordinar cambios entre múltiples equipos. Terminas con los problemas de un monolito pero con la complejidad adicional de un sistema distribuido.
