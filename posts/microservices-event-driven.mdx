@@ -342,7 +342,7 @@ El mensaje se entrega exactamente una vez. No se pierde ni se duplica.
 
 A medida que un sistema crece y se descompone en **cada vez más microservicios**, comienzan a aparecer nuevos desafíos que no existen (o son triviales) en arquitecturas monolíticas.
 
-### ¿Qué pasa si tengo muchos microservicios?
+### Problema: ¿Qué pasa si tengo muchos microservicios?
 
 En una arquitectura de microservicios, cada servicio:
 - tiene su propia lógica,
@@ -363,7 +363,7 @@ Si un cliente tuviera que comunicarse directamente con cada microservicio, surgi
 
 Esto genera un **alto acoplamiento entre el cliente y la arquitectura interna**, algo que va en contra del espíritu de los microservicios.
 
-####  API Gateway
+#### Solución: API Gateway
 
 Para resolver este problema, se introduce un **API Gateway**.
 
@@ -385,7 +385,7 @@ Desde la perspectiva del cliente: existe una única API, independientemente de c
 - Centraliza preocupaciones transversales como **autenticación**, **rate limiting**, **logging**, **caching**.
 
 
-### Escalabilidad y alto tráfico
+### Problema: Escalabilidad y alto tráfico
 Otro desafío típico aparece cuando **un microservicio recibe mucho más tráfico que los demás**.
 
 **¿Qué pasa si un microservicio no da abasto?**
@@ -396,7 +396,7 @@ Si un servicio comienza a recibir una gran cantidad de requests:
 
 La solución es **escalar horizontalmente**, levantando múltiples instancias del mismo microservicio.
 
-#### Load Balancer
+#### Solución: Load Balancer
 
 Para distribuir el tráfico entre múltiples instancias, se utiliza un **Load Balancer**.
 
@@ -416,12 +416,7 @@ Para distribuir el tráfico entre múltiples instancias, se utiliza un **Load Ba
 
 El **API Gateway** resuelve el problema de acceso y desacoplamiento del cliente, mientras que el **Load Balancer** permite escalar y distribuir carga de forma eficiente.
 
-### Versionado y Backward Compatibility
-
-En una arquitectura de microservicios, los servicios **evolucionan de manera independiente**.  
-Esto implica que no todos se deployan al mismo tiempo ni consumen la misma versión de una API.
-
-#### La problemática
+### Problema: Riesgos de cambios en microservicios
 
 A diferencia de un monolito:
 - no existe un deploy único,
@@ -435,8 +430,7 @@ Esto genera varios riesgos:
 
 Un cambio incompatible en una API puede provocar **caídas en cadena**, incluso si el servicio que cambió funciona correctamente por sí solo.
 
-
-#### La solución: Versionado y compatibilidad hacia atrás
+#### Solución: Versionado y compatibilidad hacia atrás
 
 Para evitar estos problemas, las APIs deben diseñarse con **backward compatibility** como regla.
 
@@ -454,7 +448,7 @@ Cuando un cambio incompatible es inevitable, se introduce **versionado explícit
 
 La idea central es simple: Un servicio debe poder evolucionar sin romper a quienes todavía no se actualizaron.
 
-## Service Discovery
+### Problema: Comunicación entre servicios
 
 En microservicios, los servicios no son entidades estáticas:
 - las instancias escalan,
@@ -463,8 +457,6 @@ En microservicios, los servicios no son entidades estáticas:
 - aparecen y desaparecen dinámicamente.
 
 Esto vuelve impracticable cualquier forma de configuración estática.
-
-### La problemática
 
 Si un servicio necesita comunicarse con otro:
 - ¿a qué IP se conecta?
@@ -478,7 +470,7 @@ Hardcodear direcciones o URLs:
 
 A medida que el sistema crece, esta estrategia se vuelve **insostenible**.
 
-### La solución: Service Discovery
+#### La solución: Service Discovery
 
 El **Service Discovery** permite que los servicios se encuentren dinámicamente entre sí.
 
@@ -497,8 +489,8 @@ En plataformas modernas, como Kubernetes, el service discovery suele estar integ
 - objetos **Service**,
 - balanceo automático.
 
+### Problema: Consistencia distribuida en microservicios
 
-### Consistencia distribuida
 En una arquitectura monolítica, la consistencia suele ser un problema resuelto:
 - una única base de datos,
 - una única transacción,
@@ -513,8 +505,6 @@ Cada microservicio:
 
 Esto implica que **no existe una transacción global** que garantice que todos los cambios ocurran juntos.
 
-#### El problema
-
 Cuando una operación involucra múltiples microservicios, pueden ocurrir **fallos parciales**.
 
 **Ejemplo:**
@@ -523,8 +513,7 @@ Cuando una operación involucra múltiples microservicios, pueden ocurrir **fall
 3. Se procesa el pago.
 4. Se coordina el envío.
 
-¿Qué pasa si el pago falla luego de haber reservado stock?  
-¿O si el envío falla después de cobrar?
+¿Qué pasa si el pago falla luego de haber reservado stock?   ¿O si el envío falla después de cobrar?
 
 El sistema puede quedar en un **estado inconsistente**, donde algunas acciones se completaron y otras no.
 
@@ -540,7 +529,7 @@ Esto significa aceptar que:
 
 Este cambio de paradigma es clave para entender por qué aparecen patrones como Saga.
 
-#### Patrón Saga
+#### Solución: Patrón Saga
 
 El **patrón Saga** surge como una solución al problema de la consistencia distribuida.
 
@@ -548,7 +537,7 @@ Una Saga modela una operación larga como una **secuencia de pasos**:
 - cada paso es una transacción local,
 - cada transacción tiene una **acción compensatoria** asociada.
 
-#### ¿Cómo funciona una Saga?
+#####  ¿Cómo funciona una Saga?
 
 Si todos los pasos se completan, la operación finaliza con éxito.  
 Si algún paso falla, se ejecutan las acciones compensatorias para **deshacer los efectos previos**.
@@ -563,7 +552,7 @@ Si algún paso falla, se ejecutan las acciones compensatorias para **deshacer lo
 
 De esta forma, el sistema puede volver a un estado consistente sin necesidad de locks globales.
 
-#### Tipos de Saga
+##### Tipos de Saga
 
 ##### Saga basada en Choreography
 - No hay un coordinador central.
@@ -593,13 +582,12 @@ De esta forma, el sistema puede volver a un estado consistente sin necesidad de 
 
 
 #### Tradeoffs del patrón Saga
-
 - Mayor complejidad conceptual.
 - Consistencia eventual en lugar de fuerte.
 - Debugging más difícil.
 - Necesidad de idempotencia y retries bien definidos.
 
-### Observabilidad 
+### Problema: Observabilidad 
 A medida que el sistema crece, aparece uno de los problemas más duros de los microservicios:
 
 El sistema falla, pero no sabés dónde ni por qué.
@@ -612,8 +600,6 @@ Un request puede atravesar:
 Los logs locales ya no alcanzan.
 
 La observabilidad es la capacidad de **entender qué está pasando dentro del sistema**, solo a partir de sus outputs.
-
-Nos apoyamos en tres pilares fundamentales 
 
 #### Logging distribuido
 - Logs centralizados.
@@ -634,4 +620,3 @@ Esto es fundamental para:
 - identificar cuellos de botella,
 - entender dependencias,
 - debuggear fallos complejos.
-
