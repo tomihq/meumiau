@@ -276,83 +276,6 @@ Una buena regla general es:
    - procesamiento asíncrono,
    - tolerancia a fallos.
 
-## Problemáticas comunes en arquitecturas de microservicios
-
-A medida que un sistema crece y se descompone en **cada vez más microservicios**, comienzan a aparecer nuevos desafíos que no existen (o son triviales) en arquitecturas monolíticas.
-
-### ¿Qué pasa si tengo muchos microservicios?
-
-En una arquitectura de microservicios, cada servicio:
-- tiene su propia lógica,
-- su propia API,
-- y generalmente su propia URL o IP.
-
-Si un cliente tuviera que comunicarse directamente con cada microservicio, surgirían varios problemas:
-
-- El cliente debería conocer **todas las URLs** de los microservicios.
-- Un cambio interno (endpoint, versión, ubicación) obligaría a modificar al cliente.
-- El cliente tendría que manejar:
-  - autenticación,
-  - autorización,
-  - retries,
-  - rate limiting,
-  - versionado,
-  - y fallos parciales.
-
-Esto genera un **alto acoplamiento entre el cliente y la arquitectura interna**, algo que va en contra del espíritu de los microservicios.
-
-### API Gateway
-
-Para resolver este problema, se introduce un **API Gateway**.
-
-El API Gateway actúa como un **punto de entrada único** al sistema.
-
-**¿Cómo funciona?**:
-- El cliente se comunica **solo con el API Gateway**.
-- El Gateway se encarga de:
-  - enrutar la request al microservicio correspondiente,
-  - agregar o transformar requests y responses,
-  - aplicar reglas de seguridad,
-  - manejar versionado y métricas.
-
-Desde la perspectiva del cliente: existe una única API, independientemente de cuántos microservicios haya detrás.
-
-**Beneficios principales**:
-- **Desacopla al cliente** de la estructura interna del sistema.
-- Simplifica la lógica del cliente.
-- Centraliza preocupaciones transversales como **autenticación**, **rate limiting**, **logging**, **caching**.
-
-
-### Escalabilidad y alto tráfico
-Otro desafío típico aparece cuando **un microservicio recibe mucho más tráfico que los demás**.
-
-**¿Qué pasa si un microservicio no da abasto?**
-Si un servicio comienza a recibir una gran cantidad de requests:
-- una sola instancia puede saturarse,
-- aumentar la latencia,
-- o directamente caerse.
-
-La solución es **escalar horizontalmente**, levantando múltiples instancias del mismo microservicio.
-
-### Load Balancer
-
-Para distribuir el tráfico entre múltiples instancias, se utiliza un **Load Balancer**.
-
-**¿Qué hace un Load Balancer?**
-- Recibe las requests entrantes.
-- Las distribuye entre varias instancias del mismo servicio.
-- Evita que una sola instancia se sobrecargue.
-
-**Beneficios:**
-- **Alta disponibilidad:** si una instancia cae, el tráfico se redirige a las restantes.
-- **Mejor performance:** las requests se reparten equitativamente.
-- **Escalabilidad:** se pueden agregar o quitar instancias según la demanda.
-
-**Flujo típico**: Cliente → API Gateway → Load Balancer → Instancias del Microservicio
-
-<strong>Importante</strong>: En arquitecturas de microservicios, no solo importa **cómo se comunican los servicios entre sí**, sino también **cómo acceden los clientes** y **cómo escala el sistema ante el tráfico**.
-
-El **API Gateway** resuelve el problema de acceso y desacoplamiento del cliente, mientras que el **Load Balancer** permite escalar y distribuir carga de forma eficiente.
 
 ## Casos de uso para Event-Driven Architecture
 
@@ -456,6 +379,84 @@ El mensaje se entrega al menos una vez. Puede duplicarse, pero nunca se pierde.
 El mensaje se entrega exactamente una vez. No se pierde ni se duplica.
 
 **Casos de uso**: Transacciones financieras donde debemos procesar el pago una y solo una vez.
+
+## Problemáticas comunes en arquitecturas de microservicios
+
+A medida que un sistema crece y se descompone en **cada vez más microservicios**, comienzan a aparecer nuevos desafíos que no existen (o son triviales) en arquitecturas monolíticas.
+
+### ¿Qué pasa si tengo muchos microservicios?
+
+En una arquitectura de microservicios, cada servicio:
+- tiene su propia lógica,
+- su propia API,
+- y generalmente su propia URL o IP.
+
+Si un cliente tuviera que comunicarse directamente con cada microservicio, surgirían varios problemas:
+
+- El cliente debería conocer **todas las URLs** de los microservicios.
+- Un cambio interno (endpoint, versión, ubicación) obligaría a modificar al cliente.
+- El cliente tendría que manejar:
+  - autenticación,
+  - autorización,
+  - retries,
+  - rate limiting,
+  - versionado,
+  - y fallos parciales.
+
+Esto genera un **alto acoplamiento entre el cliente y la arquitectura interna**, algo que va en contra del espíritu de los microservicios.
+
+### API Gateway
+
+Para resolver este problema, se introduce un **API Gateway**.
+
+El API Gateway actúa como un **punto de entrada único** al sistema.
+
+**¿Cómo funciona?**:
+- El cliente se comunica **solo con el API Gateway**.
+- El Gateway se encarga de:
+  - enrutar la request al microservicio correspondiente,
+  - agregar o transformar requests y responses,
+  - aplicar reglas de seguridad,
+  - manejar versionado y métricas.
+
+Desde la perspectiva del cliente: existe una única API, independientemente de cuántos microservicios haya detrás.
+
+**Beneficios principales**:
+- **Desacopla al cliente** de la estructura interna del sistema.
+- Simplifica la lógica del cliente.
+- Centraliza preocupaciones transversales como **autenticación**, **rate limiting**, **logging**, **caching**.
+
+
+### Escalabilidad y alto tráfico
+Otro desafío típico aparece cuando **un microservicio recibe mucho más tráfico que los demás**.
+
+**¿Qué pasa si un microservicio no da abasto?**
+Si un servicio comienza a recibir una gran cantidad de requests:
+- una sola instancia puede saturarse,
+- aumentar la latencia,
+- o directamente caerse.
+
+La solución es **escalar horizontalmente**, levantando múltiples instancias del mismo microservicio.
+
+### Load Balancer
+
+Para distribuir el tráfico entre múltiples instancias, se utiliza un **Load Balancer**.
+
+**¿Qué hace un Load Balancer?**
+- Recibe las requests entrantes.
+- Las distribuye entre varias instancias del mismo servicio.
+- Evita que una sola instancia se sobrecargue.
+
+**Beneficios:**
+- **Alta disponibilidad:** si una instancia cae, el tráfico se redirige a las restantes.
+- **Mejor performance:** las requests se reparten equitativamente.
+- **Escalabilidad:** se pueden agregar o quitar instancias según la demanda.
+
+**Flujo típico**: Cliente → API Gateway → Load Balancer → Instancias del Microservicio
+
+<strong>Importante</strong>: En arquitecturas de microservicios, no solo importa **cómo se comunican los servicios entre sí**, sino también **cómo acceden los clientes** y **cómo escala el sistema ante el tráfico**.
+
+El **API Gateway** resuelve el problema de acceso y desacoplamiento del cliente, mientras que el **Load Balancer** permite escalar y distribuir carga de forma eficiente.
 
 ## Preguntas frecuentes
 
