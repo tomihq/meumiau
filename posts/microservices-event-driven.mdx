@@ -306,7 +306,7 @@ Este patrón es una gran elección para los siguientes casos de uso:
 5. Infinite stream of events
 
 ## Semántica de entrega de mensajes
-Existen tres tipos de semántica de entrega:
+Existen tres tipos de semántica de entrega
 
 ### At Most Once
 El mensaje se entrega cero o una única vez. Puede perderse, pero nunca se duplica.
@@ -500,15 +500,12 @@ Una Saga modela una operación larga como una **secuencia de pasos**:
 Si todos los pasos se completan, la operación finaliza con éxito.  
 Si algún paso falla, se ejecutan las acciones compensatorias (yo las veo como la inversa) para **deshacer los efectos previos**.
 
-**Ej.**
-1. Crear orden  
-   - si falló: cancelás orden
-2. Reservar stock  
-   - si falló: liberás el stock
-3. Procesar pago  
-   - si falló: reembolsás el pago
+**Ej.**: 
+1. Crear orden, si falló: cancelás orden
+2. Reservar stock, si falló: liberás el stock
+3. Procesar pago, si falló: reembolsás el pago
 
-De esta forma, el sistema puede volver a un estado consistente sin necesidad de locks globales. Yo lo pienso como una transacción monolítica en cada microservicio particular (?.
+De esta forma, el sistema puede volver a un estado consistente sin necesidad de locks globales.
 
 ##### Tipos de Saga
 
@@ -539,10 +536,16 @@ De esta forma, el sistema puede volver a un estado consistente sin necesidad de 
 
 
 #### Tradeoffs del patrón Saga
-- Mayor complejidad conceptual.
-- Consistencia eventual en lugar de fuerte.
-- Debugging más difícil.
-- Necesidad de idempotencia y retries bien definidos.
+- **Mayor complejidad conceptual**: no hay una única transacción global; cada microservicio maneja su propia transacción local y comunica el resultado a través de eventos o mensajes.  
+- **Consistencia eventual en lugar de fuerte**:  
+  - En transacciones ACID tradicionales (fuerte consistencia), cuando la operación termina, todos los datos están actualizados de forma inmediata y consistente.  
+  - En Sagas, cada microservicio actualiza su propia base de datos de manera independiente y comunica el resultado.  
+  - Esto significa que, en un momento dado, los datos pueden estar desincronizados entre servicios.  
+  - La consistencia no es inmediata, sino que se logra eventualmente, cuando todos los pasos y compensaciones se completan.  
+- **Debugging más difícil**: rastrear fallos en un flujo distribuido con múltiples servicios y compensaciones es más complejo que en una transacción centralizada.  
+- **Necesidad de idempotencia y retries bien definidos**:  
+  - **Idempotencia**: la capacidad de ejecutar la misma operación varias veces sin duplicar efectos si un evento llega más de una vez.  
+  - **Retries**: la capacidad de reintentar una operación fallida de manera controlada hasta que tenga éxito o se alcance un límite, garantizando que los errores transitorios no rompan el flujo del sistema.
 
 ### Problema: Observabilidad 
 A medida que el sistema crece, aparece uno de los problemas más duros de los microservicios
