@@ -24,9 +24,8 @@ export async function generateMetadata({
     image,
   } = post.metadata;
 
-  let ogImage = image
-  ? `${NEXT_PUBLIC_URL}${image}`
-  : `${NEXT_PUBLIC_URL}og?title=${title}`;
+  // Siempre usar la imagen OG generada dinámicamente
+  let ogImage = `${NEXT_PUBLIC_URL}/og?title=${encodeURIComponent(title)}`;
 
   return {
     title: `${title}`,
@@ -77,9 +76,7 @@ export default async function PostPage({params}) {
             datePublished: post.metadata.publishedAt,
             dateModified: post.metadata.publishedAt,
             description: post.metadata.summary,
-            image: post.metadata.image
-              ? `${NEXT_PUBLIC_URL}${post.metadata.image}`
-              : `${NEXT_PUBLIC_URL}/og?title=${post.metadata.title}`,
+            image: `${NEXT_PUBLIC_URL}/og?title=${encodeURIComponent(post.metadata.title)}`,
             url: `${NEXT_PUBLIC_URL}/blog/${post.slug}`,
             author: {
               '@type': 'Person',
