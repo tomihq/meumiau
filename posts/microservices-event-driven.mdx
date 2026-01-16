@@ -243,7 +243,7 @@ Una buena regla es:
 ### 1. Fire and Forget
 Se utiliza cuando el cliente **no espera una respuesta**, o bien **no necesita que la respuesta sea inmediata**.
 
-**Ej.s:**
+**Ej.:**
 - **Respuesta no inmediata:** generar un reporte pesado cuyo tiempo de procesamiento es desconocido. El sistema inicia el proceso y notifica al usuario cuando el reporte está listo.
 - **Sin respuesta:** cuando un usuario deja una reseña en un producto. Al usuario solo le importa que la acción se haya registrado, no recibir una confirmación posterior.
 
@@ -272,8 +272,7 @@ Se utiliza cuando un evento debe ser **difundido a múltiples servicios**, sin q
 ### 6. Buffering
 Permite **absorber picos de tráfico** mediante un message broker, evitando sobrecargar los servicios consumidores.
 
-**Ej.**:
-- En una red social, si un post se vuelve viral y recibe millones de interacciones simultáneas, el message broker actúa como buffer:
+**Ej.**: En una red social, si un post se vuelve viral y recibe millones de interacciones simultáneas, el message broker actúa como buffer:
   - recibe todos los eventos,
   - los encola,
   - y los distribuye gradualmente a servicios como *PostsService* y *CommentsService* según su capacidad de procesamiento.
