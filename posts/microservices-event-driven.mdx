@@ -87,7 +87,9 @@ Esto no suele ser bueno porque hay algunos problemas que pueden ser resueltos de
 
 **Ej. 1: Servicios de Inteligencia Artificial**
 
-Imaginemos que tenés una aplicación de e-commerce escrita en TypeScript/Node.js. Querés agregar funcionalidades de IA como:
+Imaginemos que tenés una aplicación de e-commerce escrita en TypeScript/Node.js. 
+
+Querés agregar funcionalidades de IA como:
 - Recomendaciones personalizadas de productos
 - Análisis de sentimiento en reviews
 - Detección de fraudes con machine learning
@@ -145,25 +147,14 @@ Cada servicio contiene un subconjunto de la funcionalidad global, por lo que el 
 
 #### 2. Escalabilidad del sistema más alta
 
-En un **monolito**, cada servidor tiene toda la aplicación, lo que conlleva un costo más alto de mantenimiento. En microservicios:
+En un **monolito**, cada servidor tiene toda la aplicación, lo que conlleva un costo más alto de mantenimiento. 
 
+En microservicios:
 - Cada instancia es más chica, consume menos memoria y CPU, y puede correrse en servidores más baratos.  
 - Cada microservicio puede ser desarrollado en el lenguaje más adecuado para su dominio, facilitando refactorizaciones o cambios tecnológicos sin afectar al resto.  
 - Mayor estabilidad: si un microservicio falla, podemos levantar más instancias rápidamente sin esperar un deploy de todo el monolito.
 
-
-#### 3. Flexibilidad tecnológica
-
-Supongamos que tenés un **RecommendationService** que procesa millones de interacciones de usuarios:
-
-- **Monolito en TypeScript**: limitaciones en ML: librerías más lentas, menos maduras y muchas técnicas avanzadas no disponibles.  
-- **Microservicio en Python**: acceso a TensorFlow, PyTorch, NumPy, Pandas, scikit-learn.  
-**Resultado**: hasta **10-100 veces más rápido** y con funcionalidades que no existen en JavaScript.  
-
-**Clave**: no es solo que “podés usar diferentes lenguajes”, es que **necesitás usar el lenguaje correcto** para cada dominio específico.
-
 **Nota práctica**: normalmente varios microservicios corren como contenedores en el mismo servidor. Cada microservicio puede tener **límites de CPU y memoria distintos** según lo necesite: uno con 2GB de RAM, otro con 4GB, y así sucesivamente. Esto permite ajustar los recursos de manera fina y eficiente sin repetir lo que ya explicamos sobre escalabilidad.
-
 
 ### Desafíos de los microservicios
 
@@ -196,12 +187,12 @@ Existen **dos modelos principales de comunicación entre microservicios**, que s
 ### Request-Response Model
 Es el **modelo síncrono**, donde un servicio realiza una petición (generalmente HTTP) a otro servicio y **espera la respuesta** para continuar su ejecución.
 
-**Características**:
+**Características**
 - **Comunicación síncrona:** el *Sender* envía una petición y debe esperar a que el *Receiver* responda.
 - **Bloqueo temporal:** si la respuesta no llega (por caída o lentitud del Receiver), el Sender queda bloqueado hasta que ocurra un timeout.
 - **Acoplamiento**: el Sender necesita conocer exactamente quién es el Receiver, cómo es su API y dónde está ubicado.
 
-**Casos de uso**:
+**Casos de uso**
 - Cuando el usuario **necesita la respuesta inmediatamente**  (ej.: cargar los productos antes de renderizar una página).
 - Cuando la interacción es **simple y directa**, y no justifica el costo adicional de mantener un message broker, manejar eventos, lidiar con consistencia eventual, etc. 
 
