@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { GoogleTagManager } from "@next/third-parties/google";
+
 
 import "./globals.css";
 import Nav from "@/components/nav";
@@ -44,6 +46,10 @@ export default function RootLayout({
       >
         <Nav />
         {children}
+        {process.env.NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID &&
+        process.env.NODE_ENV === "production" && (
+          <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID!} />
+        )}
         <TerminalWrapper />
 
         <Footer />
