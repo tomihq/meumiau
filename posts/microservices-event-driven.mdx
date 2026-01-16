@@ -545,15 +545,11 @@ De esta forma, el sistema puede volver a un estado consistente sin necesidad de 
 - Necesidad de idempotencia y retries bien definidos.
 
 ### Problema: Observabilidad 
-A medida que el sistema crece, aparece uno de los problemas más duros de los microservicios:
-
-El sistema falla, pero no sabés dónde ni por qué.
-
-Un request puede atravesar: un API Gateway, varios microservicios, múltiples queues y eventos.
-
-Los logs locales ya no alcanzan.
-
-La observabilidad es la capacidad de **entender qué está pasando dentro del sistema**, solo a partir de sus outputs.
+A medida que el sistema crece, aparece uno de los problemas más duros de los microservicios
+- El sistema falla, pero no sabés dónde ni por qué.
+- Un request puede atravesar: un API Gateway, varios microservicios, múltiples queues y eventos.
+- Los logs locales ya no alcanzan.
+- La observabilidad es la capacidad de **entender qué está pasando dentro del sistema**, solo a partir de sus outputs.
 
 Para eso, podemos usar 3 herramientas fundamentales
 
