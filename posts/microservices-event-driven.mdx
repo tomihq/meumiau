@@ -7,7 +7,7 @@ summary: 'Exploro cómo una arquitectura de microservicios evoluciona a partir d
 ## ¿Qué vas a aprender acá?
 
 Al terminar este post vas a entender:
-- **Por qué pasar de un monolito a microservicios no es gratis** y qué nuevos problemas aparecen al hacerlo.
+- **Por qué migrar de monolito a microservicios no es gratis (ni fácil)** y qué nuevos problemas aparecen al hacerlo.
 - **Cómo se comunican los microservicios** y cuándo usar Request-Response o Event-Driven.
 - **Qué limitaciones tiene el modelo síncrono** y en qué escenarios una arquitectura Event-Driven es necesaria.
 - **Qué pasa cuando tenés muchos microservicios y clientes acoplados**, y cómo un API Gateway resuelve ese problema.
@@ -39,7 +39,7 @@ Cuando los microservicios se implementan bien, permiten a las organizaciones:
 3. **Mantener bajos los costos operacionales**: Al poder optimizar recursos por servicio.
 4. **Ser eficientes e innovar**: Permitiendo que equipos trabajen de forma independiente.
 
-**Importante**: La idea de usar microservicios y escalar rápido puede ser motivador, pero muchas organizaciones los implementan mal y deshacen la decisión de migrar. Si se aplican bien (y en el momento adecuado) pueden ser muy beneficiosos.
+**Importante**: La idea de usar microservicios y escalar rápido puede ser motivador, pero muchas organizaciones los implementan mal y deshacen la decisión de migrar. Si se aplican bien (y en el momento adecuado) pueden ser muy Ventajasos.
 
 Hay un dicho que dice que si tu equipo puede ser alimentado por 2 pizzas, entonces podés seguir usando arquitectura monolítica. Esto nos da una idea de cuándo considerar migrar a microservicios.
 
@@ -47,9 +47,9 @@ Hay un dicho que dice que si tu equipo puede ser alimentado por 2 pizzas, entonc
 
 En una aplicación monolítica, la lógica de negocio, el desarrollo del backend y el manejo de la base de datos está en una misma aplicación.
 
-Este tipo de arquitectura tiene muchos beneficios y es por eso que hoy en día se sigue utilizando, especialmente en startups y equipos pequeños.
+Este tipo de arquitectura tiene muchos Ventajas y es por eso que hoy en día se sigue utilizando, especialmente en startups y equipos pequeños.
 
-### Beneficios del monolito
+### Ventajas del monolito
 
 1. **Fáciles de diseñar**: Se acopla a cualquier sistema web, sea cual sea el tipo del negocio.
 2. **Fácil de implementar**: Los desarrolladores no tienen que romperse la cabeza. Usan tecnologías que conocen y podemos tener fácilmente un sistema funcional.
@@ -85,7 +85,7 @@ También es más difícil de migrar algunas tecnologías viejas. Cualquier bug p
 
 Esto no suele ser bueno porque hay algunos procesos que requieren de otros paradigmas o incluso lenguajes que performan mucho mejor para una tarea dada.
 
-**Ejemplo 1: Servicios de Inteligencia Artificial**
+**Ej. 1: Servicios de Inteligencia Artificial**
 
 Imaginemos que tenés una aplicación de e-commerce escrita en TypeScript/Node.js. Querés agregar funcionalidades de IA como:
 - Recomendaciones personalizadas de productos
@@ -104,7 +104,7 @@ Si intentás hacer esto en TypeScript, terminarías:
 - Usando bindings de JavaScript a librerías de Python (lo cual es lento y complicado).
 - O simplemente no pudiendo implementar ciertas funcionalidades por falta de herramientas.
 
-**Ejemplo 2: Análisis de Datos y Big Data**
+**Ej. 2: Análisis de Datos y Big Data**
 
 Servicios que procesan grandes volúmenes de datos se benefician de:
 - Python con Pandas, Dask, o PySpark para análisis de datos.
@@ -132,7 +132,7 @@ Microservicios es la solución cuando necesitás resolver problemas de **escalab
 3. **Independencia de despliegue**: Cuando necesitás desplegar y escalar componentes individuales sin afectar al resto del sistema.  
 4. **Flexibilidad tecnológica**: Cuando diferentes partes de tu aplicación se benefician de distintos lenguajes o tecnologías. Esta es una de las ventajas más poderosas de los microservicios.
 
-### Beneficios de los microservicios
+### Ventajas de los microservicios
 
 #### 1. Escalabilidad organizativa mayor
 
@@ -183,7 +183,7 @@ Si un cliente hizo una solicitud para hacer X cosa pero esa X cosa necesita comu
 Puede suceder que:
 - La información no llegue.
 - La información sea incorrecta.
-- La información demore demasiado tiempo.
+- La información tarda demasiado tiempo en llegar.
 
 #### 4. Dificultad en la separación de responsabilidades
 Si las responsabilidades de los microservicios están mal distribuidas podemos tener problemas organizacionales. Si un cambio en un microservicio conlleva a hablar con otros equipos hay algo raro (cada equipo debería funcionar por sí solo).
@@ -196,20 +196,14 @@ Existen **dos modelos principales de comunicación entre microservicios**, que s
 ### Request-Response Model
 Es el **modelo síncrono**, donde un servicio realiza una petición (generalmente HTTP) a otro servicio y **espera la respuesta** para continuar su ejecución.
 
-**Características:**
+**Características**:
 - **Comunicación síncrona:** el *Sender* envía una petición y debe esperar a que el *Receiver* responda.
 - **Bloqueo temporal:** si la respuesta no llega (por caída o lentitud del Receiver), el Sender queda bloqueado hasta que ocurra un timeout.
-- **Acoplamiento explícito:** el Sender necesita conocer exactamente:
-  1. quién es el Receiver,
-  2. cómo es su API,
-  3. dónde está ubicado.
+- **Acoplamiento**: el Sender necesita conocer exactamente quién es el Receiver, cómo es su API y dónde está ubicado.
 
-**Casos de uso:**
+**Casos de uso**:
 - Cuando el usuario **necesita la respuesta inmediatamente**  (ej.: cargar los productos antes de renderizar una página).
-- Cuando la interacción es **simple y directa**, y no justifica el costo adicional de:
-  1. mantener un message broker,
-  2. manejar eventos,
-  3. lidiar con consistencia eventual.
+- Cuando la interacción es **simple y directa**, y no justifica el costo adicional de mantener un message broker, manejar eventos, lidiar con consistencia eventual, etc. 
 
 
 ### Event-Driven Architecture
@@ -236,7 +230,7 @@ En la práctica, una arquitectura de microservicios **no elige uno u otro**, sin
 1. **Event-Driven Architecture**
 2. **Synchronous Request-Response Model**
 
-Una buena regla general es:
+Una buena regla es:
 
 1. **Empezar con Request-Response**, por su simplicidad y menor costo operativo.
 2. **Evolucionar hacia Event-Driven** únicamente cuando sea necesario:
@@ -245,49 +239,40 @@ Una buena regla general es:
    - procesamiento asíncrono,
    - tolerancia a fallos.
 
-
 ## Casos de uso para Event-Driven Architecture
 ### 1. Fire and Forget
 Se utiliza cuando el cliente **no espera una respuesta**, o bien **no necesita que la respuesta sea inmediata**.
 
-**Ejemplos:**
+**Ej.s:**
 - **Respuesta no inmediata:** generar un reporte pesado cuyo tiempo de procesamiento es desconocido. El sistema inicia el proceso y notifica al usuario cuando el reporte está listo.
 - **Sin respuesta:** cuando un usuario deja una reseña en un producto. Al usuario solo le importa que la acción se haya registrado, no recibir una confirmación posterior.
 
 ### 2. Entrega confiable
 
 Aplica cuando **no nos podemos permitir perder eventos o acciones**.
-**Ejemplos:**
+**Ej.s:**
 - En transacciones financieras, ningún mensaje puede perderse.
 - Si un usuario paga un producto pero el servicio de entregas no es notificado debido a una caída, el sistema debe **reintentar el envío del evento** hasta garantizar que sea recibido.
-
 
 ### 3. Flujo continuo de eventos (alta frecuencia)
 En escenarios como ubicación en tiempo real o datos de sensores, se generan **grandes volúmenes de eventos por segundo**, por lo que no es viable bloquear ni procesar cada evento inmediatamente.
 
-**Enfoque:**
-- Recibir los eventos.
-- Encolarlos.
-- Procesarlos posteriormente para análisis o agregación.
+**Enfoque**: recibir los eventos, encolarlos y procesarlos posteriormente.
 
 ### 4. Detección de anomalías y reconocimiento de patrones
 Los eventos permiten **monitorear el comportamiento del sistema**.
 
-**Ejemplo:**
-- Si el message broker deja de recibir eventos, puede indicar un problema en los Producers, lo que permite detectar fallos de forma temprana.
-
+**Ej.**: Si el message broker deja de recibir eventos, puede indicar un problema en los Producers, lo que permite detectar fallos de forma temprana.
 
 ### 5. Broadcasting
 Se utiliza cuando un evento debe ser **difundido a múltiples servicios**, sin que el cliente que originó la acción tenga conocimiento de los efectos secundarios.
 
-**Ejemplo:**
-- En sistemas de publicidad, al recibir un click, el *AdService* publica un evento que es consumido por múltiples servicios (facturación, métricas, analytics), sin impactar en la experiencia del usuario.
-
+**Ej.**: En sistemas de publicidad, al recibir un click, el *AdService* publica un evento que es consumido por múltiples servicios (facturación, métricas, analytics), sin impactar en la experiencia del usuario.
 
 ### 6. Buffering
 Permite **absorber picos de tráfico** mediante un message broker, evitando sobrecargar los servicios consumidores.
 
-**Ejemplo:**
+**Ej.**:
 - En una red social, si un post se vuelve viral y recibe millones de interacciones simultáneas, el message broker actúa como buffer:
   - recibe todos los eventos,
   - los encola,
@@ -324,7 +309,7 @@ Este patrón es una gran elección para los siguientes casos de uso:
 Existen tres tipos de semántica de entrega:
 
 ### At Most Once
-El mensaje se entrega cero o una vez. Puede perderse, pero nunca se duplica.
+El mensaje se entrega cero o una única vez. Puede perderse, pero nunca se duplica.
 
 **Casos de uso**: Información que no es crítica si se pierde (ej.: actualizaciones de ubicación en tiempo real de un dispositivo IoT).
 
@@ -340,17 +325,13 @@ El mensaje se entrega exactamente una vez. No se pierde ni se duplica.
 
 ## Problemáticas comunes en arquitecturas de microservicios
 
-A medida que un sistema crece y se descompone en **cada vez más microservicios**, comienzan a aparecer nuevos desafíos que no existen (o son triviales) en arquitecturas monolíticas.
+A medida que un sistema crece y se descompone en **cada vez más microservicios**, comienzan a aparecer nuevos desafíos que no existen en arquitecturas monolíticas.
 
 ### Problema: ¿Qué pasa si tengo muchos microservicios?
 
-En una arquitectura de microservicios, cada servicio:
-- tiene su propia lógica,
-- su propia API,
-- y generalmente su propia URL o IP.
+En una arquitectura de microservicios, cada servicio tiene su propia lógica, su propia API y su propia URL o IP.
 
 Si un cliente tuviera que comunicarse directamente con cada microservicio, surgirían varios problemas:
-
 - El cliente debería conocer **todas las URLs** de los microservicios.
 - Un cambio interno (endpoint, versión, ubicación) obligaría a modificar al cliente.
 - El cliente tendría que manejar:
@@ -361,56 +342,46 @@ Si un cliente tuviera que comunicarse directamente con cada microservicio, surgi
   - versionado,
   - y fallos parciales.
 
-Esto genera un **alto acoplamiento entre el cliente y la arquitectura interna**, algo que va en contra del espíritu de los microservicios.
+Esto genera un **alto acoplamiento entre el cliente y la arquitectura interna**
 
 #### Solución: API Gateway
-
 Para resolver este problema, se introduce un **API Gateway**.
 
 El API Gateway actúa como un **punto de entrada único** al sistema.
 
 **¿Cómo funciona?**:
 - El cliente se comunica **solo con el API Gateway**.
-- El Gateway se encarga de:
-  - enrutar la request al microservicio correspondiente,
-  - agregar o transformar requests y responses,
-  - aplicar reglas de seguridad,
-  - manejar versionado y métricas.
+- El Gateway se encarga del resto como redirigir la request al microservicio correspondiente,
 
 Desde la perspectiva del cliente: existe una única API, independientemente de cuántos microservicios haya detrás.
 
-**Beneficios principales**:
+**Ventajas**:
 - **Desacopla al cliente** de la estructura interna del sistema.
-- Simplifica la lógica del cliente.
-- Centraliza preocupaciones transversales como **autenticación**, **rate limiting**, **logging**, **caching**.
-
+- Simplifica la lógica del cliente. No tiene que conocer todos los microservicios. 
+- Centraliza las soluciones a problemas transversales como **rate limiting**, **logging**, **caching**.
 
 ### Problema: Escalabilidad y alto tráfico
 Otro desafío típico aparece cuando **un microservicio recibe mucho más tráfico que los demás**.
 
-**¿Qué pasa si un microservicio no da abasto?**
-Si un servicio comienza a recibir una gran cantidad de requests:
-- una sola instancia puede saturarse,
-- aumentar la latencia,
-- o directamente caerse.
-
-La solución es **escalar horizontalmente**, levantando múltiples instancias del mismo microservicio.
+**¿Qué pasa si un microservicio no aguanta el tráfico?**
+Si un servicio comienza a recibir una gran cantidad de requests la instancia puede saturarse, aumentar la latencia, o directamente caerse.
 
 #### Solución: Load Balancer
+La solución es **escalar horizontalmente**, levantando múltiples instancias del mismo microservicio.
 
 Para distribuir el tráfico entre múltiples instancias, se utiliza un **Load Balancer**.
 
 **¿Qué hace un Load Balancer?**
-- Recibe las requests entrantes.
-- Las distribuye entre varias instancias del mismo servicio.
-- Evita que una sola instancia se sobrecargue.
+- Recibe las requests entrantes
+- Las distribuye entre varias instancias del mismo servicio
+- Evita que una sola instancia se sobrecargue
 
-**Beneficios:**
-- **Alta disponibilidad:** si una instancia cae, el tráfico se redirige a las restantes.
-- **Mejor performance:** las requests se reparten equitativamente.
-- **Escalabilidad:** se pueden agregar o quitar instancias según la demanda.
+**Ventajas:**
+- **Alta disponibilidad:** si una instancia cae, el tráfico se redirige a las restantes
+- **Mejor performance:** las requests se reparten equitativamente
+- **Escalabilidad:** se pueden agregar o quitar instancias según la demanda
 
-**Flujo típico**: Cliente → API Gateway → Load Balancer → Instancias del Microservicio
+**Flujo**: Cliente → API Gateway → Load Balancer → Instancias del Microservicio
 
 **Importante**: En arquitecturas de microservicios, no solo importa **cómo se comunican los servicios entre sí**, sino también **cómo acceden los clientes** y **cómo escala el sistema ante el tráfico**.
 
@@ -421,18 +392,15 @@ El **API Gateway** resuelve el problema de acceso y desacoplamiento del cliente,
 A diferencia de un monolito:
 - no existe un deploy único,
 - no se puede asumir que todos los consumidores se actualizan al mismo tiempo,
-- requests “viejos” pueden seguir llegando durante semanas o meses.
 
-Esto genera varios riesgos:
+Esto genera varios problemas:
 - romper consumidores existentes,
 - generar fallos difíciles de detectar,
 - forzar deploys coordinados (volviendo al acoplamiento del monolito).
 
-Un cambio incompatible en una API puede provocar **caídas en cadena**, incluso si el servicio que cambió funciona correctamente por sí solo.
-
 #### Solución: Versionado y compatibilidad hacia atrás
 
-Para evitar estos problemas, las APIs deben diseñarse con **backward compatibility** como regla.
+Para evitar estos problemas, las APIs deben diseñarse con **backward compatibility**
 
 Esto implica:
 - evitar cambios breaking en endpoints existentes *(la cantidad de veces que sufrí con esto)*,
@@ -441,20 +409,19 @@ Esto implica:
 
 Cuando un cambio incompatible es inevitable, se introduce **versionado explícito**.
 
-**Ejemplos comunes de versionado:**
+**Ej.s comunes de versionado:**
 - Versionado en la URL: **/v1/orders**, **/v2/orders**
 - Versionado por headers
 - Versionado gestionado desde el API Gateway
 
-La idea central es simple: Un servicio debe poder evolucionar sin romper a quienes todavía no se actualizaron.
+Importante: lo del versionado muchas veces es la salida fácil, pero a veces se hace medio denso de mantener.
 
 ### Problema: Comunicación entre servicios
 
 En microservicios, los servicios no son entidades estáticas:
-- las instancias escalan,
-- se reinician,
-- cambian de IP,
-- aparecen y desaparecen dinámicamente.
+- las instancias crecen por sí mismas
+- se reinician
+- cambian de IP
 
 Esto vuelve impracticable cualquier forma de configuración estática.
 
@@ -463,12 +430,7 @@ Si un servicio necesita comunicarse con otro:
 - ¿qué pasa si esa instancia cae?
 - ¿cómo sabe cuántas instancias existen en ese momento?
 
-Hardcodear direcciones o URLs:
-- no escala,
-- es frágil,
-- rompe con el principio de despliegue independiente.
-
-A medida que el sistema crece, esta estrategia se vuelve **insostenible**.
+Hardcodear direcciones o URLs no escala, es fácil que falle y que rompe con el principio de despliegue independiente.
 
 #### La solución: Service Discovery
 
@@ -491,25 +453,22 @@ En plataformas modernas, como Kubernetes, el service discovery suele estar integ
 
 ### Problema: Consistencia distribuida en microservicios
 
-En una arquitectura monolítica, la consistencia suele ser un problema resuelto:
-- una única base de datos,
-- una única transacción,
-- commit o rollback.
+En una arquitectura monolítica, la consistencia no suele ser un problema.
 
-En una arquitectura de microservicios, **esto deja de ser cierto**.
+En una arquitectura de microservicios, la consistencia se vuelve un problema.
 
 Cada microservicio:
 - tiene su propia base de datos,
 - maneja su propio estado,
-- se despliega de manera independiente.
+- se desplega y escala de manera independiente.
 
 Esto implica que **no existe una transacción global** que garantice que todos los cambios ocurran juntos.
 
-Cuando una operación involucra múltiples microservicios, pueden ocurrir **fallos parciales**.
+Cuando una operación involucra múltiples microservicios, pueden ocurrir **fallos** o **inconsistencias**.
 
-**Ejemplo:**
-1. Se crea una orden.
-2. Se reserva stock.
+**Ej.**:
+1. Se crea un pedido de X del producto Y. 
+2. Se reserva Y para el pedido X.
 3. Se procesa el pago.
 4. Se coordina el envío.
 
@@ -519,13 +478,12 @@ El sistema puede quedar en un **estado inconsistente**, donde algunas acciones s
 
 #### Consistencia eventual
 
-En microservicios, el enfoque cambia:
-El sistema no siempre está consistente en todo momento,  pero **eventualmente llega a un estado consistente**.
+En microservicios, el sistema no siempre está consistente en todo momento,  pero **eventualmente llega a un estado consistente**.
 
 Esto significa aceptar que:
 - los datos pueden estar temporalmente desincronizados,
-- distintos servicios pueden ver distintos estados del sistema,
-- la consistencia fuerte es la excepción, no la regla.
+- distintos servicios pueden ver distintos estados del sistema (diuh),
+- la consistencia fuerte es la excepción (y no es una regla!).
 
 Este cambio de paradigma es clave para entender por qué aparecen patrones como Saga.
 
@@ -540,17 +498,17 @@ Una Saga modela una operación larga como una **secuencia de pasos**:
 #####  ¿Cómo funciona una Saga?
 
 Si todos los pasos se completan, la operación finaliza con éxito.  
-Si algún paso falla, se ejecutan las acciones compensatorias para **deshacer los efectos previos**.
+Si algún paso falla, se ejecutan las acciones compensatorias (yo las veo como la inversa) para **deshacer los efectos previos**.
 
-**Ejemplo simplificado:**
+**Ej.**
 1. Crear orden  
-   ↳ compensación: cancelar orden
+   - si falló: cancelás orden
 2. Reservar stock  
-   ↳ compensación: liberar stock
+   - si falló: liberás el stock
 3. Procesar pago  
-   ↳ compensación: reembolsar pago
+   - si falló: reembolsás el pago
 
-De esta forma, el sistema puede volver a un estado consistente sin necesidad de locks globales.
+De esta forma, el sistema puede volver a un estado consistente sin necesidad de locks globales. Yo lo pienso como una transacción monolítica en cada microservicio particular (?.
 
 ##### Tipos de Saga
 
@@ -559,7 +517,7 @@ De esta forma, el sistema puede volver a un estado consistente sin necesidad de 
 - Los servicios reaccionan a eventos.
 - Cada servicio decide cuál es el próximo paso.
 
-**Ventajas:**
+**Ventajas**:
 - Mayor desacoplamiento.
 - Arquitectura más distribuida.
 
@@ -567,14 +525,13 @@ De esta forma, el sistema puede volver a un estado consistente sin necesidad de 
 - Flujo difícil de seguir.
 - Debugging complejo a gran escala.
 
-
 ##### Saga basada en Orchestration
 - Existe un **orquestador** que controla el flujo.
 - El orquestador decide qué servicio ejecutar y cuándo.
 
-**Ventajas:**
-- Flujo explícito y fácil de entender.
-- Mejor control de errores.
+**Ventajas**:
+- Flujo explícito y fácil de entender
+- Mejor control de errores
 
 **Desventajas:**
 - Mayor acoplamiento.
@@ -592,34 +549,30 @@ A medida que el sistema crece, aparece uno de los problemas más duros de los mi
 
 El sistema falla, pero no sabés dónde ni por qué.
 
-Un request puede atravesar:
-- un API Gateway,
-- varios microservicios,
-- múltiples colas y eventos.
+Un request puede atravesar: un API Gateway, varios microservicios, múltiples queues y eventos.
 
 Los logs locales ya no alcanzan.
 
 La observabilidad es la capacidad de **entender qué está pasando dentro del sistema**, solo a partir de sus outputs.
 
+Para eso, podemos usar 3 herramientas fundamentales
+
 #### Logging distribuido
-- Logs centralizados.
-- Cada request tiene un **correlation ID**.
-- Permite reconstruir el recorrido de una request.
+- Logs centralizados
+- Cada request tiene un **correlation ID**, normalmente es un UUID.
+- Permite reconstruir el recorrido de una request
 
 #### Métricas 
-- Latencia.
-- Throughput.
-- Error rate.
-- Uso de recursos.
+- Latencia
+- Throughput
+- Error rate
+- Uso de recursos
 
 #### Tracing distribuido
-- Permite seguir una request a través de múltiples servicios.
-- Cada salto queda registrado como un *span* dentro de un *trace*.
+- Permite seguir una request a través de múltiples servicios
+- Cada salto queda registrado como un *span* dentro de un *trace*
 
-Esto es fundamental para:
-- identificar cuellos de botella,
-- entender dependencias,
-- debuggear fallos complejos.
+Esto es fundamental para: identificar cuellos de botella, entender dependencias y debuggear fallas.
 
 ## Conclusión
 Me quedó mucho más largo de lo que pensaba, pero creo que abarqué todo lo que aprendí de microservicios en la práctica.
