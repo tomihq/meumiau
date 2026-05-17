@@ -99,6 +99,12 @@ Por ejemplo, en Express, podés ponerlo en el index.ts o donde configures tu apl
 mongoClient();
 ```
 
+### Nota técnica
+
+Aunque la variable global persista entre warm starts, esto no garantiza que los sockets TCP subyacentes sigan abiertos. La base de datos o la infraestructura de red pueden cerrar conexiones inactivas.
+
+En la práctica, esto no suele ser un problema porque drivers modernos como Mongoose y el driver oficial de MongoDB detectan automáticamente conexiones inválidas y las recrean cuando es necesario.
+
 ## ¿Por qué esto no es común en un VPS?
 
 Este problema **no suele ocurrir con el modelo tradicional de VPS**, ya que en ese caso se levanta una única instancia del backend para gestionar todas las peticiones. 
