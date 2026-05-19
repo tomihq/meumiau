@@ -15,16 +15,10 @@ import Link from "next/link"
 
 const languages = [
   {
-    code: "es",
-    name: "Español",
-    flag: "🇪🇸",
-    file: "https://drive.google.com/file/d/1Fb0v5WzC7GFO_0DlPuAMGU2E5bJ0JU2r/preview",
-  },
-  {
     code: "en",
     name: "English",
     flag: "🇺🇸",
-    file: "https://drive.google.com/file/d/1yiUuYKJ8QDrISQVGL5Xu41ux6ulORecr/preview",
+    file: "https://drive.google.com/file/d/1KsLAJ2cQQJ3L1TM3ytbF5xfp6xnnCyHs/preview",
   }
 ]
 
