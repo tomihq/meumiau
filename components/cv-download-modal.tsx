@@ -18,7 +18,7 @@ const languages = [
     code: "en",
     name: "English",
     flag: "🇺🇸",
-    file: "https://drive.google.com/file/d/1IZP3yOJpfOKEJND9c3Rs7wto_iNQ9Pk9/preview",
+    file: "https://drive.google.com/file/d/1MNsrAfMpbkCVkpDHYs06y1vSHZODpdK4/preview",
   }
 ]
 
